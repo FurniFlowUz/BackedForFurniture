@@ -1,0 +1,8 @@
+{
+  "customerId": 0,
+  "categoryIds": [1],
+  "totalAmount": 5000.00,
+  "advancePaymentAmount": 1500.00,
+  "productionDurationDays": 30,
+  "signedDate": "2026-01-20T17:00:00"
+}
