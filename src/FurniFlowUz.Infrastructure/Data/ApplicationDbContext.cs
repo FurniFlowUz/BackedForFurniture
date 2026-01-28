@@ -17,13 +17,14 @@ public class ApplicationDbContext : DbContext
         _currentUserService = currentUserService;
     }
 
-    // DbSet properties for all 25 entities
+    // DbSet properties for all 26 entities
     public DbSet<User> Users => Set<User>();
     public DbSet<Employee> Employees => Set<Employee>();
     public DbSet<Position> Positions => Set<Position>();
     public DbSet<Department> Departments => Set<Department>();
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<Category> Categories => Set<Category>();
+    public DbSet<FurnitureTypeTemplate> FurnitureTypeTemplates => Set<FurnitureTypeTemplate>();
     public DbSet<Contract> Contracts => Set<Contract>();
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<FurnitureType> FurnitureTypes => Set<FurnitureType>();

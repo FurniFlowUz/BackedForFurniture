@@ -1,6 +1,6 @@
 using FurniFlowUz.Domain.Entities;
 
-namespace FurniFlowUz.Domain.Interfaces;
+namespace FurniFlowUz.Infrastructure.Repositories;
 
 /// <summary>
 /// Repository interface for FurnitureTypeTemplate operations

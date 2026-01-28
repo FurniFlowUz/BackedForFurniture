@@ -8,6 +8,7 @@ using FurniFlowUz.Application.DTOs.Customer;
 using FurniFlowUz.Application.DTOs.Department;
 using FurniFlowUz.Application.DTOs.DetailTask;
 using FurniFlowUz.Application.DTOs.Employee;
+using FurniFlowUz.Application.DTOs.FurnitureTypeTemplate;
 using FurniFlowUz.Application.DTOs.MaterialAssignment;
 using FurniFlowUz.Application.DTOs.Notification;
 using FurniFlowUz.Application.DTOs.Order;
@@ -33,6 +34,7 @@ public class AutoMapperProfile : Profile
         ConfigureDepartmentMappings();
         ConfigureCustomerMappings();
         ConfigureCategoryMappings();
+        ConfigureFurnitureTypeTemplateMappings();
         ConfigureContractMappings();
         ConfigureOrderMappings();
         ConfigureConstructorMappings();
@@ -163,7 +165,8 @@ public class AutoMapperProfile : Profile
             .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
             .ForMember(dest => dest.DeletedAt, opt => opt.Ignore())
             .ForMember(dest => dest.DeletedBy, opt => opt.Ignore())
-            .ForMember(dest => dest.Orders, opt => opt.Ignore());
+            .ForMember(dest => dest.Orders, opt => opt.Ignore())
+            .ForMember(dest => dest.FurnitureTypeTemplates, opt => opt.Ignore());
 
         // UpdateCategoryDto to Category
         CreateMap<UpdateCategoryDto, Category>()
@@ -175,7 +178,45 @@ public class AutoMapperProfile : Profile
             .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
             .ForMember(dest => dest.DeletedAt, opt => opt.Ignore())
             .ForMember(dest => dest.DeletedBy, opt => opt.Ignore())
-            .ForMember(dest => dest.Orders, opt => opt.Ignore());
+            .ForMember(dest => dest.Orders, opt => opt.Ignore())
+            .ForMember(dest => dest.FurnitureTypeTemplates, opt => opt.Ignore());
+    }
+
+    /// <summary>
+    /// Configure FurnitureTypeTemplate entity mappings
+    /// </summary>
+    private void ConfigureFurnitureTypeTemplateMappings()
+    {
+        // FurnitureTypeTemplate to FurnitureTypeTemplateDto
+        CreateMap<FurnitureTypeTemplate, FurnitureTypeTemplateDto>()
+            .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category.Name));
+
+        // CreateFurnitureTypeTemplateDto to FurnitureTypeTemplate
+        CreateMap<CreateFurnitureTypeTemplateDto, FurnitureTypeTemplate>()
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatedBy, opt => opt.Ignore())
+            .ForMember(dest => dest.UpdatedBy, opt => opt.Ignore())
+            .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
+            .ForMember(dest => dest.DeletedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.DeletedBy, opt => opt.Ignore())
+            .ForMember(dest => dest.Category, opt => opt.Ignore())
+            .ForMember(dest => dest.FurnitureTypes, opt => opt.Ignore());
+
+        // UpdateFurnitureTypeTemplateDto to FurnitureTypeTemplate
+        CreateMap<UpdateFurnitureTypeTemplateDto, FurnitureTypeTemplate>()
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ForMember(dest => dest.CategoryId, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatedBy, opt => opt.Ignore())
+            .ForMember(dest => dest.UpdatedBy, opt => opt.Ignore())
+            .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
+            .ForMember(dest => dest.DeletedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.DeletedBy, opt => opt.Ignore())
+            .ForMember(dest => dest.Category, opt => opt.Ignore())
+            .ForMember(dest => dest.FurnitureTypes, opt => opt.Ignore());
     }
 
     /// <summary>

@@ -1,5 +1,4 @@
 using FurniFlowUz.Domain.Entities;
-using FurniFlowUz.Domain.Interfaces;
 using FurniFlowUz.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;

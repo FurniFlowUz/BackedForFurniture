@@ -81,7 +81,7 @@ namespace FurniFlowUz.Infrastructure.Migrations
 
                     b.HasIndex("EntityName", "EntityId");
 
-                    b.ToTable("AuditLogs");
+                    b.ToTable("AuditLogs", (string)null);
                 });
 
             modelBuilder.Entity("FurniFlowUz.Domain.Entities.Category", b =>
@@ -145,7 +145,7 @@ namespace FurniFlowUz.Infrastructure.Migrations
 
                     b.HasIndex("Name");
 
-                    b.ToTable("Categories");
+                    b.ToTable("Categories", (string)null);
                 });
 
             modelBuilder.Entity("FurniFlowUz.Domain.Entities.CategoryAssignment", b =>
@@ -217,7 +217,7 @@ namespace FurniFlowUz.Infrastructure.Migrations
 
                     b.HasIndex("TeamLeaderId");
 
-                    b.ToTable("CategoryAssignments");
+                    b.ToTable("CategoryAssignments", (string)null);
                 });
 
             modelBuilder.Entity("FurniFlowUz.Domain.Entities.Contract", b =>
@@ -307,7 +307,7 @@ namespace FurniFlowUz.Infrastructure.Migrations
 
                     b.HasIndex("Status");
 
-                    b.ToTable("Contracts");
+                    b.ToTable("Contracts", (string)null);
                 });
 
             modelBuilder.Entity("FurniFlowUz.Domain.Entities.Customer", b =>
@@ -367,7 +367,7 @@ namespace FurniFlowUz.Infrastructure.Migrations
 
                     b.HasIndex("PhoneNumber");
 
-                    b.ToTable("Customers");
+                    b.ToTable("Customers", (string)null);
                 });
 
             modelBuilder.Entity("FurniFlowUz.Domain.Entities.Department", b =>
@@ -412,7 +412,7 @@ namespace FurniFlowUz.Infrastructure.Migrations
 
                     b.HasIndex("Name");
 
-                    b.ToTable("Departments");
+                    b.ToTable("Departments", (string)null);
                 });
 
             modelBuilder.Entity("FurniFlowUz.Domain.Entities.Detail", b =>
@@ -479,7 +479,7 @@ namespace FurniFlowUz.Infrastructure.Migrations
 
                     b.HasIndex("FurnitureTypeId");
 
-                    b.ToTable("Details");
+                    b.ToTable("Details", (string)null);
                 });
 
             modelBuilder.Entity("FurniFlowUz.Domain.Entities.DetailTask", b =>
@@ -561,7 +561,7 @@ namespace FurniFlowUz.Infrastructure.Migrations
 
                     b.HasIndex("CategoryAssignmentId", "Sequence");
 
-                    b.ToTable("DetailTasks");
+                    b.ToTable("DetailTasks", (string)null);
                 });
 
             modelBuilder.Entity("FurniFlowUz.Domain.Entities.Drawing", b =>
@@ -617,7 +617,7 @@ namespace FurniFlowUz.Infrastructure.Migrations
 
                     b.HasIndex("FurnitureTypeId");
 
-                    b.ToTable("Drawings");
+                    b.ToTable("Drawings", (string)null);
                 });
 
             modelBuilder.Entity("FurniFlowUz.Domain.Entities.Employee", b =>
@@ -696,7 +696,7 @@ namespace FurniFlowUz.Infrastructure.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("Employees");
+                    b.ToTable("Employees", (string)null);
                 });
 
             modelBuilder.Entity("FurniFlowUz.Domain.Entities.FurnitureType", b =>
@@ -757,7 +757,7 @@ namespace FurniFlowUz.Infrastructure.Migrations
                         .IsUnique()
                         .HasFilter("[TechnicalSpecificationId] IS NOT NULL");
 
-                    b.ToTable("FurnitureTypes");
+                    b.ToTable("FurnitureTypes", (string)null);
                 });
 
             modelBuilder.Entity("FurniFlowUz.Domain.Entities.KPI", b =>
@@ -818,7 +818,7 @@ namespace FurniFlowUz.Infrastructure.Migrations
                     b.HasIndex("Date")
                         .IsUnique();
 
-                    b.ToTable("KPIs");
+                    b.ToTable("KPIs", (string)null);
                 });
 
             modelBuilder.Entity("FurniFlowUz.Domain.Entities.MaterialAssignment", b =>
@@ -893,7 +893,7 @@ namespace FurniFlowUz.Infrastructure.Migrations
 
                     b.HasIndex("WarehouseItemId");
 
-                    b.ToTable("MaterialAssignments");
+                    b.ToTable("MaterialAssignments", (string)null);
                 });
 
             modelBuilder.Entity("FurniFlowUz.Domain.Entities.MaterialRequest", b =>
@@ -960,7 +960,7 @@ namespace FurniFlowUz.Infrastructure.Migrations
                     b.HasIndex("WarehouseTransactionId")
                         .IsUnique();
 
-                    b.ToTable("MaterialRequests");
+                    b.ToTable("MaterialRequests", (string)null);
                 });
 
             modelBuilder.Entity("FurniFlowUz.Domain.Entities.Notification", b =>
@@ -1037,7 +1037,7 @@ namespace FurniFlowUz.Infrastructure.Migrations
 
                     b.HasIndex("UserId", "IsRead");
 
-                    b.ToTable("Notifications");
+                    b.ToTable("Notifications", (string)null);
                 });
 
             modelBuilder.Entity("FurniFlowUz.Domain.Entities.Order", b =>
@@ -1127,7 +1127,7 @@ namespace FurniFlowUz.Infrastructure.Migrations
 
                     b.HasIndex("Status");
 
-                    b.ToTable("Orders");
+                    b.ToTable("Orders", (string)null);
                 });
 
             modelBuilder.Entity("FurniFlowUz.Domain.Entities.Position", b =>
@@ -1172,7 +1172,7 @@ namespace FurniFlowUz.Infrastructure.Migrations
 
                     b.HasIndex("Name");
 
-                    b.ToTable("Positions");
+                    b.ToTable("Positions", (string)null);
                 });
 
             modelBuilder.Entity("FurniFlowUz.Domain.Entities.ProductionStage", b =>
@@ -1236,7 +1236,7 @@ namespace FurniFlowUz.Infrastructure.Migrations
 
                     b.HasIndex("StageType");
 
-                    b.ToTable("ProductionStages");
+                    b.ToTable("ProductionStages", (string)null);
                 });
 
             modelBuilder.Entity("FurniFlowUz.Domain.Entities.TaskPerformance", b =>
@@ -1295,7 +1295,7 @@ namespace FurniFlowUz.Infrastructure.Migrations
                     b.HasIndex("DetailTaskId")
                         .IsUnique();
 
-                    b.ToTable("TaskPerformances");
+                    b.ToTable("TaskPerformances", (string)null);
                 });
 
             modelBuilder.Entity("FurniFlowUz.Domain.Entities.Team", b =>
@@ -1352,7 +1352,7 @@ namespace FurniFlowUz.Infrastructure.Migrations
 
                     b.HasIndex("TeamLeaderId");
 
-                    b.ToTable("Teams");
+                    b.ToTable("Teams", (string)null);
                 });
 
             modelBuilder.Entity("FurniFlowUz.Domain.Entities.TechnicalSpecification", b =>
@@ -1406,7 +1406,7 @@ namespace FurniFlowUz.Infrastructure.Migrations
 
                     b.HasIndex("IsLocked");
 
-                    b.ToTable("TechnicalSpecifications");
+                    b.ToTable("TechnicalSpecifications", (string)null);
                 });
 
             modelBuilder.Entity("FurniFlowUz.Domain.Entities.User", b =>
@@ -1480,7 +1480,7 @@ namespace FurniFlowUz.Infrastructure.Migrations
 
                     b.HasIndex("Role");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("FurniFlowUz.Domain.Entities.WarehouseItem", b =>
@@ -1555,7 +1555,7 @@ namespace FurniFlowUz.Infrastructure.Migrations
                     b.HasIndex("SKU")
                         .IsUnique();
 
-                    b.ToTable("WarehouseItems");
+                    b.ToTable("WarehouseItems", (string)null);
                 });
 
             modelBuilder.Entity("FurniFlowUz.Domain.Entities.WarehouseTransaction", b =>
@@ -1622,7 +1622,7 @@ namespace FurniFlowUz.Infrastructure.Migrations
 
                     b.HasIndex("WarehouseItemId");
 
-                    b.ToTable("WarehouseTransactions");
+                    b.ToTable("WarehouseTransactions", (string)null);
                 });
 
             modelBuilder.Entity("FurniFlowUz.Domain.Entities.WorkTask", b =>
@@ -1718,7 +1718,7 @@ namespace FurniFlowUz.Infrastructure.Migrations
 
                     b.HasIndex("OrderId", "SequenceOrder");
 
-                    b.ToTable("WorkTasks");
+                    b.ToTable("WorkTasks", (string)null);
                 });
 
             modelBuilder.Entity("TeamMember", b =>
@@ -1733,7 +1733,7 @@ namespace FurniFlowUz.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("TeamMember");
+                    b.ToTable("TeamMember", (string)null);
                 });
 
             modelBuilder.Entity("FurniFlowUz.Domain.Entities.AuditLog", b =>

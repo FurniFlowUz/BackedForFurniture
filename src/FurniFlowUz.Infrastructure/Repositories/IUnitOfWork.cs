@@ -1,5 +1,4 @@
 using FurniFlowUz.Domain.Entities;
-using FurniFlowUz.Domain.Interfaces;
 
 namespace FurniFlowUz.Infrastructure.Repositories;
 
