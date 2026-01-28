@@ -28,4 +28,9 @@ public class Category : BaseAuditableEntity
 
     // Navigation properties
     public ICollection<Order> Orders { get; set; } = new List<Order>();
+
+    /// <summary>
+    /// Templates for furniture types in this category
+    /// </summary>
+    public ICollection<FurnitureTypeTemplate> FurnitureTypeTemplates { get; set; } = new List<FurnitureTypeTemplate>();
 }

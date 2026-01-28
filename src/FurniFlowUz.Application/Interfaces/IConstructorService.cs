@@ -93,4 +93,9 @@ public interface IConstructorService
     /// Completes and locks a technical specification, making it ready for production
     /// </summary>
     Task CompleteTechnicalSpecificationAsync(int furnitureTypeId,CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Completes a furniture type with all data (details, technical spec) in one request
+    /// </summary>
+    Task CompleteFurnitureTypeWithDataAsync(int furnitureTypeId, CompleteFurnitureTypeDto request, CancellationToken cancellationToken = default);
 }

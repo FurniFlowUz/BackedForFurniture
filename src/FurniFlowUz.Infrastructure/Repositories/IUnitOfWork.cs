@@ -1,10 +1,11 @@
 using FurniFlowUz.Domain.Entities;
+using FurniFlowUz.Domain.Interfaces;
 
 namespace FurniFlowUz.Infrastructure.Repositories;
 
 public interface IUnitOfWork : IDisposable
 {
-    // Repository properties for all 25 entities
+    // Repository properties for all entities
     IRepository<User> Users { get; }
     IRepository<Employee> Employees { get; }
     IRepository<Position> Positions { get; }
@@ -14,6 +15,7 @@ public interface IUnitOfWork : IDisposable
     IRepository<Contract> Contracts { get; }
     IRepository<Order> Orders { get; }
     IRepository<FurnitureType> FurnitureTypes { get; }
+    IFurnitureTypeTemplateRepository FurnitureTypeTemplates { get; }
     IRepository<Detail> Details { get; }
     IRepository<Drawing> Drawings { get; }
     IRepository<TechnicalSpecification> TechnicalSpecifications { get; }

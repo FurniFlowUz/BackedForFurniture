@@ -1,4 +1,5 @@
 using FurniFlowUz.Domain.Entities;
+using FurniFlowUz.Domain.Interfaces;
 using FurniFlowUz.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -21,6 +22,7 @@ public class UnitOfWork : IUnitOfWork
     private IRepository<Contract>? _contracts;
     private IRepository<Order>? _orders;
     private IRepository<FurnitureType>? _furnitureTypes;
+    private IFurnitureTypeTemplateRepository? _furnitureTypeTemplates;
     private IRepository<Detail>? _details;
     private IRepository<Drawing>? _drawings;
     private IRepository<TechnicalSpecification>? _technicalSpecifications;
@@ -53,6 +55,7 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<Contract> Contracts => _contracts ??= new Repository<Contract>(_context);
     public IRepository<Order> Orders => _orders ??= new Repository<Order>(_context);
     public IRepository<FurnitureType> FurnitureTypes => _furnitureTypes ??= new Repository<FurnitureType>(_context);
+    public IFurnitureTypeTemplateRepository FurnitureTypeTemplates => _furnitureTypeTemplates ??= new FurnitureTypeTemplateRepository(_context);
     public IRepository<Detail> Details => _details ??= new Repository<Detail>(_context);
     public IRepository<Drawing> Drawings => _drawings ??= new Repository<Drawing>(_context);
     public IRepository<TechnicalSpecification> TechnicalSpecifications => _technicalSpecifications ??= new Repository<TechnicalSpecification>(_context);

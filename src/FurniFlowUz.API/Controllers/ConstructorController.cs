@@ -354,4 +354,28 @@ public class ConstructorController : ControllerBase
         await _constructorService.CompleteTechnicalSpecificationAsync(furnitureTypeId, cancellationToken);
         return Ok(ApiResponse<object>.SuccessResponse(null, "Technical specification completed and locked successfully"));
     }
+
+    /// <summary>
+    /// Completes a furniture type with all data (details, technical spec) in one request
+    /// </summary>
+    /// <param name="furnitureTypeId">Furniture type ID</param>
+    /// <param name="request">Complete furniture type data</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Success response</returns>
+    [HttpPost("complete-with-data/{furnitureTypeId}")]
+    public async Task<ActionResult<ApiResponse<object>>> CompleteFurnitureTypeWithData(
+        [FromRoute] int furnitureTypeId,
+        [FromBody] CompleteFurnitureTypeDto request,
+        CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ApiResponse<object>.FailureResponse(
+                "Invalid request data",
+                ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList()));
+        }
+
+        await _constructorService.CompleteFurnitureTypeWithDataAsync(furnitureTypeId, request, cancellationToken);
+        return Ok(ApiResponse<object>.SuccessResponse(null, "Furniture type completed successfully with all data"));
+    }
 }
