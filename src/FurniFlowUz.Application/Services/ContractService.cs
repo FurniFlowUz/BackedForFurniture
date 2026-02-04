@@ -100,7 +100,7 @@ public class ContractService : IContractService
             TotalAmount = contract.TotalAmount,
             AdvancePaymentAmount = contract.AdvancePaymentAmount,
             RemainingAmount = contract.RemainingAmount,
-            ProductionDurationDays = contract.ProductionDurationDays,
+            DeadlineDate = contract.DeadlineDate,
             PaymentStatus = contract.PaymentStatus.ToString(),
             Status = contract.Status.ToString(),
             RequiresApproval = contract.RequiresApproval,
@@ -132,11 +132,6 @@ public class ContractService : IContractService
             request.AdvancePaymentAmount = request.TotalAmount * (request.AdvancePaymentPercentage.Value / 100.0m);
         }
 
-        // Convert Deadline to ProductionDurationDays
-        if (request.Deadline.HasValue && request.ProductionDurationDays == 30 && request.SignedDate.HasValue)
-        {
-            request.ProductionDurationDays = (int)(request.Deadline.Value - request.SignedDate.Value).TotalDays;
-        }
 
         // Convert deprecated fields to new fields
         if (!string.IsNullOrEmpty(request.Description) && string.IsNullOrEmpty(request.AdditionalNotes))
@@ -272,7 +267,7 @@ public class ContractService : IContractService
             RemainingAmount = remainingAmount,
             PaymentStatus = PaymentStatus.Pending,
             Status = ContractStatus.New,
-            ProductionDurationDays = request.ProductionDurationDays,
+            DeadlineDate = request.DeadlineDate,
             SignedDate = request.SignedDate,
             DeliveryTerms = request.DeliveryTerms,
             PenaltyTerms = request.PenaltyTerms,
@@ -341,7 +336,7 @@ public class ContractService : IContractService
         if (!string.IsNullOrEmpty(request.PaymentStatus))
             contract.PaymentStatus = Enum.Parse<PaymentStatus>(request.PaymentStatus);
         contract.Status = Enum.Parse<ContractStatus>(request.Status);
-        contract.ProductionDurationDays = request.ProductionDurationDays;
+        contract.DeadlineDate = request.DeadlineDate;
         contract.SignedDate = request.SignedDate;
         contract.DeliveryTerms = request.DeliveryTerms;
         contract.PenaltyTerms = request.PenaltyTerms;
@@ -426,11 +421,14 @@ public class ContractService : IContractService
         var today = DateTime.UtcNow;
         var prefix = $"SH-{today:yyyy}";
 
-        // Get all contract numbers with this year's prefix to find the highest sequence
-        var allContracts = await _unitOfWork.Contracts.GetAllAsync(cancellationToken);
-        var yearContracts = allContracts
-            .Where(c => c.ContractNumber.StartsWith(prefix))
-            .ToList();
+        // CRITICAL: We need to check ALL contracts including soft-deleted ones
+        // to avoid reusing contract numbers. The repository has a global query filter
+        // that excludes soft-deleted records by default, so we use FindIgnoringQueryFiltersAsync.
+
+        // Get all contracts with this year's prefix (including soft-deleted)
+        var yearContracts = await _unitOfWork.Contracts.FindIgnoringQueryFiltersAsync(
+            c => c.ContractNumber.StartsWith(prefix),
+            cancellationToken);
 
         int maxSequence = 0;
         if (yearContracts.Any())
@@ -449,9 +447,24 @@ public class ContractService : IContractService
             }
         }
 
+        // Increment to get next sequence
         var sequence = maxSequence + 1;
+        var contractNumber = $"{prefix}-{sequence:D4}";
 
-        return $"{prefix}-{sequence:D4}";
+        // Double-check that this number doesn't already exist (race condition protection)
+        // Also ignore query filters here to check all contracts including soft-deleted
+        var existing = await _unitOfWork.Contracts.FindIgnoringQueryFiltersAsync(
+            c => c.ContractNumber == contractNumber,
+            cancellationToken);
+
+        if (existing.Any())
+        {
+            // If collision detected, try next number
+            sequence++;
+            contractNumber = $"{prefix}-{sequence:D4}";
+        }
+
+        return contractNumber;
     }
 
     #region Private Helper Methods

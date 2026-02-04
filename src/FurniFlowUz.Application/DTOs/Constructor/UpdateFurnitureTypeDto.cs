@@ -13,4 +13,9 @@ public class UpdateFurnitureTypeDto
     [Required(ErrorMessage = "Name is required")]
     [MaxLength(200)]
     public string Name { get; set; } = string.Empty;
+
+    /// <summary>
+    /// OrderCategory identifier (optional) - links to specific order-category relationship
+    /// </summary>
+    public int? OrderCategoryId { get; set; }
 }

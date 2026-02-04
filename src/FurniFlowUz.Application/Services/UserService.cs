@@ -95,6 +95,68 @@ public class UserService : IUserService
     }
 
     /// <summary>
+    /// Gets all available team leaders with assignment statistics
+    /// EFFICIENT QUERY - Includes department, position, and counts active/completed assignments
+    /// </summary>
+    public async Task<List<TeamLeaderDto>> GetTeamLeadersWithStatsAsync()
+    {
+        // First, get all team leader users with their employee info
+        var teamLeaderUsers = await _dbContext.Users
+            .Include(u => u.Employee)
+            .ThenInclude(e => e!.Department)
+            .Include(u => u.Employee)
+            .ThenInclude(e => e!.Position)
+            .Where(u =>
+                u.IsActive &&
+                u.Role == UserRole.TeamLeader &&
+                u.Employee != null &&
+                u.Employee.IsActive)
+            .ToListAsync();
+
+        // Get assignment counts for these team leaders
+        var teamLeaderIds = teamLeaderUsers.Select(u => u.Id).ToList();
+
+        var assignmentStats = await _dbContext.CategoryAssignments
+            .Where(ca => teamLeaderIds.Contains(ca.TeamLeaderId))
+            .GroupBy(ca => ca.TeamLeaderId)
+            .Select(g => new
+            {
+                TeamLeaderId = g.Key,
+                ActiveCount = g.Count(ca => ca.Status == CategoryAssignmentStatus.Assigned || ca.Status == CategoryAssignmentStatus.InProgress),
+                CompletedCount = g.Count(ca => ca.Status == CategoryAssignmentStatus.Completed)
+            })
+            .ToListAsync();
+
+        // Get team names for these team leaders
+        var teamNames = await _dbContext.Teams
+            .Where(t => teamLeaderIds.Contains(t.TeamLeaderId))
+            .Select(t => new { t.TeamLeaderId, t.Name })
+            .ToListAsync();
+
+        // Combine data
+        return teamLeaderUsers
+            .OrderBy(u => u.Employee!.FullName)
+            .Select(u =>
+            {
+                var stats = assignmentStats.FirstOrDefault(s => s.TeamLeaderId == u.Id);
+                var teamName = teamNames.FirstOrDefault(t => t.TeamLeaderId == u.Id)?.Name;
+
+                return new TeamLeaderDto
+                {
+                    Id = u.Id,  // User ID for assignment
+                    FullName = u.Employee!.FullName,
+                    Phone = u.Employee.Phone,
+                    Department = u.Employee.Department?.Name ?? "-",
+                    Position = u.Employee.Position?.Name ?? "Team Leader",
+                    ActiveAssignments = stats?.ActiveCount ?? 0,
+                    CompletedAssignments = stats?.CompletedCount ?? 0,
+                    TeamName = teamName
+                };
+            })
+            .ToList();
+    }
+
+    /// <summary>
     /// Gets all furniture types for constructor view with role-based filtering
     /// EFFICIENT QUERY - Joins with Order and Customer, includes counts
     /// Returns ONLY furniture types from orders accessible to the current user

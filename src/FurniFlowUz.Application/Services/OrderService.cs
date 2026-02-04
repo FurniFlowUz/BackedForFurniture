@@ -40,12 +40,35 @@ public class OrderService : IOrderService
         // Apply role-based filtering
         var filteredOrders = await ApplyRoleBasedFilteringAsync(orders, cancellationToken);
 
-        return _mapper.Map<IEnumerable<OrderDto>>(filteredOrders);
+        var orderDtos = _mapper.Map<IEnumerable<OrderDto>>(filteredOrders).ToList();
+
+        // Get images count for each order
+        var orderIds = filteredOrders.Select(o => o.Id).ToList();
+        var allOrderImages = await _unitOfWork.OrderImages.GetAllAsync(cancellationToken);
+        var imagesCountByOrder = allOrderImages
+            .Where(oi => orderIds.Contains(oi.OrderId) && !oi.IsDeleted)
+            .GroupBy(oi => oi.OrderId)
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        foreach (var orderDto in orderDtos)
+        {
+            if (orderDto.Id.HasValue && imagesCountByOrder.ContainsKey(orderDto.Id.Value))
+            {
+                orderDto.ImagesCount = imagesCountByOrder[orderDto.Id.Value];
+            }
+        }
+
+        return orderDtos;
     }
 
     public async Task<OrderDto> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        var order = await _unitOfWork.Orders.GetByIdAsync(id, cancellationToken);
+        // Include all related entities including OrderCategories for Categories mapping
+        var order = await _unitOfWork.Orders.GetByIdWithIncludesAsync(
+            id,
+            "Customer,Category,Contract,AssignedConstructor,AssignedProductionManager,FurnitureTypes,OrderCategories.Category",
+            cancellationToken);
+
         if (order == null)
         {
             throw new NotFoundException(nameof(Order), id);
@@ -61,7 +84,14 @@ public class OrderService : IOrderService
             throw new UnauthorizedAccessException($"You do not have permission to access order {id}.");
         }
 
-        return _mapper.Map<OrderDto>(order);
+        var orderDto = _mapper.Map<OrderDto>(order);
+
+        // Get images count for this order
+        var orderImages = await _unitOfWork.OrderImages.FindAsync(
+            oi => oi.OrderId == id && !oi.IsDeleted, cancellationToken);
+        orderDto.ImagesCount = orderImages.Count();
+
+        return orderDto;
     }
 
     public async Task<PaginatedResult<OrderListDto>> GetPagedAsync(OrderFilterDto filter, CancellationToken cancellationToken = default)
@@ -69,13 +99,13 @@ public class OrderService : IOrderService
         // Build filter predicate with role-based filtering
         var predicate = await BuildFilterPredicateWithRoleAsync(filter, cancellationToken);
 
-        // Get paginated data with Contract included for complete projection
+        // Get paginated data with Contract and OrderCategories included for complete projection
         var orders = await _unitOfWork.Orders.GetPagedAsync(
             filter.PageNumber,
             filter.PageSize,
             predicate,
             orderBy: q => q.OrderByDescending(o => o.CreatedAt),
-            includeProperties: "Customer,Category,Contract,AssignedConstructor,AssignedProductionManager",
+            includeProperties: "Customer,Category,Contract,AssignedConstructor,AssignedProductionManager,OrderCategories.Category",
             cancellationToken);
 
         // Count with role-based filtering applied
@@ -87,6 +117,14 @@ public class OrderService : IOrderService
         var allCategories = await _unitOfWork.Categories.GetAllAsync(cancellationToken);
         var categoryDict = allCategories.ToDictionary(c => c.Id, c => c.Name);
 
+        // Get images count for all orders
+        var orderIds = orders.Select(o => o.Id).ToList();
+        var allOrderImages = await _unitOfWork.OrderImages.GetAllAsync(cancellationToken);
+        var imagesCountByOrder = allOrderImages
+            .Where(oi => orderIds.Contains(oi.OrderId) && !oi.IsDeleted)
+            .GroupBy(oi => oi.OrderId)
+            .ToDictionary(g => g.Key, g => g.Count());
+
         // Manual projection with complete display-ready data
         var orderDtos = orders.Select(order => new OrderListDto
         {
@@ -96,12 +134,11 @@ public class OrderService : IOrderService
             ContractNumber = order.Contract?.ContractNumber,
             CustomerName = order.Customer?.FullName ?? "Unknown",
 
-            // Parse category names from contract
-            CategoryNames = order.Contract != null && !string.IsNullOrEmpty(order.Contract.CategoryIds)
-                ? order.Contract.CategoryIds.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                    .Select(id => int.TryParse(id.Trim(), out var catId) ? catId : 0)
-                    .Where(id => id > 0 && categoryDict.ContainsKey(id))
-                    .Select(id => categoryDict[id])
+            // Get category names from OrderCategories (Many-to-Many relationship)
+            CategoryNames = order.OrderCategories != null && order.OrderCategories.Any()
+                ? order.OrderCategories
+                    .Where(oc => oc.Category != null)
+                    .Select(oc => oc.Category.Name)
                     .ToList()
                 : new List<string> { categoryDict.ContainsKey(order.CategoryId) ? categoryDict[order.CategoryId] : "Unknown" },
 
@@ -115,7 +152,8 @@ public class OrderService : IOrderService
                 ? $"{order.AssignedProductionManager.FirstName} {order.AssignedProductionManager.LastName}"
                 : null,
             DeadlineDate = order.DeadlineDate,
-            CreatedAt = order.CreatedAt
+            CreatedAt = order.CreatedAt,
+            ImagesCount = imagesCountByOrder.ContainsKey(order.Id) ? imagesCountByOrder[order.Id] : 0
         }).ToList();
 
         return new PaginatedResult<OrderListDto>
@@ -183,10 +221,8 @@ public class OrderService : IOrderService
 
         var primaryCategoryId = categoryIds.First(); // Use first category as primary
 
-        // Calculate deadline from contract production duration
-        var deadlineDate = contract.SignedDate.HasValue
-            ? contract.SignedDate.Value.AddDays(contract.ProductionDurationDays)
-            : DateTime.UtcNow.AddDays(contract.ProductionDurationDays);
+        // Use deadline date from contract
+        var deadlineDate = contract.DeadlineDate;
 
         // ===================================================================
         // GENERATE ORDER NUMBER
@@ -214,6 +250,21 @@ public class OrderService : IOrderService
         await _unitOfWork.Orders.AddAsync(order, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
+        // ===================================================================
+        // SAVE ALL CATEGORIES TO OrderCategories (Many-to-Many)
+        // ===================================================================
+        foreach (var categoryId in categoryIds)
+        {
+            var orderCategory = new OrderCategory
+            {
+                OrderId = order.Id,
+                CategoryId = categoryId,
+                CreatedAt = DateTime.UtcNow
+            };
+            await _unitOfWork.OrderCategories.AddAsync(orderCategory, cancellationToken);
+        }
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
         // Load customer for notification
         var customer = await _unitOfWork.Customers.GetByIdAsync(customerId, cancellationToken);
 
@@ -237,11 +288,52 @@ public class OrderService : IOrderService
             throw new NotFoundException(nameof(Order), id);
         }
 
-        // Update order properties
-        order.DeadlineDate = request.ExpectedDeliveryDate;
-        order.CompletedAt = request.ActualDeliveryDate;
-        order.Status = Enum.Parse<OrderStatus>(request.Status);
-        order.Notes = request.Description; // Description maps to Notes
+        // Update description if provided
+        if (request.Description != null)
+        {
+            order.Notes = request.Description;
+        }
+
+        // Update notes if provided
+        if (request.Notes != null)
+        {
+            order.Notes = request.Notes;
+        }
+
+        // Update categories if provided - update OrderCategories
+        if (request.CategoryIds != null && request.CategoryIds.Any())
+        {
+            // Validate all categories exist
+            foreach (var categoryId in request.CategoryIds)
+            {
+                var category = await _unitOfWork.Categories.GetByIdAsync(categoryId, cancellationToken);
+                if (category == null)
+                {
+                    throw new NotFoundException(nameof(Category), categoryId);
+                }
+            }
+
+            // Update primary category (first in the list)
+            order.CategoryId = request.CategoryIds.First();
+
+            // Remove existing OrderCategories for this order
+            var existingOrderCategories = await _unitOfWork.OrderCategories.FindAsync(
+                oc => oc.OrderId == id, cancellationToken);
+            _unitOfWork.OrderCategories.RemoveRange(existingOrderCategories);
+
+            // Add new OrderCategories
+            foreach (var categoryId in request.CategoryIds)
+            {
+                var orderCategory = new OrderCategory
+                {
+                    OrderId = id,
+                    CategoryId = categoryId,
+                    CreatedAt = DateTime.UtcNow
+                };
+                await _unitOfWork.OrderCategories.AddAsync(orderCategory, cancellationToken);
+            }
+        }
+
         order.UpdatedAt = DateTime.UtcNow;
 
         _unitOfWork.Orders.Update(order);

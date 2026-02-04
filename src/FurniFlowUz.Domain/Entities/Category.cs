@@ -30,6 +30,11 @@ public class Category : BaseAuditableEntity
     public ICollection<Order> Orders { get; set; } = new List<Order>();
 
     /// <summary>
+    /// Many-to-Many relationship with Orders
+    /// </summary>
+    public ICollection<OrderCategory> OrderCategories { get; set; } = new List<OrderCategory>();
+
+    /// <summary>
     /// Templates for furniture types in this category
     /// </summary>
     public ICollection<FurnitureTypeTemplate> FurnitureTypeTemplates { get; set; } = new List<FurnitureTypeTemplate>();

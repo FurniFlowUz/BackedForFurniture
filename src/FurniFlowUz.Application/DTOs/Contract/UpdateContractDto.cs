@@ -28,11 +28,10 @@ public class UpdateContractDto
     public decimal AdvancePaymentAmount { get; set; }
 
     /// <summary>
-    /// Production duration in days
+    /// Deadline date for production completion
     /// </summary>
-    [Required(ErrorMessage = "Production duration is required")]
-    [Range(1, int.MaxValue, ErrorMessage = "Production duration must be at least 1 day")]
-    public int ProductionDurationDays { get; set; }
+    [Required(ErrorMessage = "Deadline date is required")]
+    public DateTime DeadlineDate { get; set; }
 
     /// <summary>
     /// Contract signed date

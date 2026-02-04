@@ -49,15 +49,10 @@ public class CreateContractDto
     public decimal? AdvancePaymentPercentage { get; set; }
 
     /// <summary>
-    /// Production duration in days (optional, default 30)
+    /// Deadline date for production completion
     /// </summary>
-    public int ProductionDurationDays { get; set; } = 30;
-
-    /// <summary>
-    /// DEPRECATED: Deadline for backward compatibility.
-    /// If provided, ProductionDurationDays will be calculated from SignedDate.
-    /// </summary>
-    public DateTime? Deadline { get; set; }
+    [Required(ErrorMessage = "Deadline date is required")]
+    public DateTime DeadlineDate { get; set; }
 
     /// <summary>
     /// DEPRECATED: Description for backward compatibility. Maps to AdditionalNotes.

@@ -23,6 +23,21 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
             .FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
     }
 
+    public virtual async Task<T?> GetByIdWithIncludesAsync(int id, string includeProperties, CancellationToken cancellationToken = default)
+    {
+        IQueryable<T> query = _dbSet.AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(includeProperties))
+        {
+            foreach (var includeProperty in includeProperties.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                query = query.Include(includeProperty.Trim());
+            }
+        }
+
+        return await query.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+    }
+
     public virtual async Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await _dbSet
@@ -80,6 +95,17 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
         CancellationToken cancellationToken = default)
     {
         return await _dbSet.AnyAsync(predicate, cancellationToken);
+    }
+
+    public virtual async Task<IEnumerable<T>> FindIgnoringQueryFiltersAsync(
+        Expression<Func<T, bool>> predicate,
+        CancellationToken cancellationToken = default)
+    {
+        return await _dbSet
+            .IgnoreQueryFilters()
+            .AsNoTracking()
+            .Where(predicate)
+            .ToListAsync(cancellationToken);
     }
 
     public virtual async Task<IEnumerable<T>> GetPagedAsync(

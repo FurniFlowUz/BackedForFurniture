@@ -49,7 +49,18 @@
       "Bash(git push:*)",
       "Bash(git pull:*)",
       "Bash(timeout:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(start cmd //c \"npm run dev\")",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyMDAzIiwiZW1haWwiOiJiZWtAZ21haWwuY29tIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiQ29uc3RydWN0b3IiLCJ1c2VySWQiOiIyMDAzIiwiZmlyc3ROYW1lIjoiQmVrIiwibGFzdE5hbWUiOiIiLCJqdGkiOiI3MzdjY2YzYi0zZTY2LTQwMDUtOTliYS01NGY3NTFhNjQ4YmIiLCJleHAiOjE3Njk3MDI0NDMsImlzcyI6IkZ1cm5pRmxvd1V6IiwiYXVkIjoiRnVybmlGbG93VXoifQ.VMHm8r3Bh6WD_1ATrxU4bjjb6GLWPZfLPS0l8lkEtL0\")",
+      "Bash(npm --version:*)",
+      "Bash(python -m json.tool:*)",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyMDAzIiwiZW1haWwiOiJiZWtAZ21haWwuY29tIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiQ29uc3RydWN0b3IiLCJ1c2VySWQiOiIyMDAzIiwiZmlyc3ROYW1lIjoiQmVrIiwibGFzdE5hbWUiOiIiLCJqdGkiOiJiMmE0YzkyNy02ZWU5LTQ0NGUtOWQ3OC1lODBlYjAwOWY2YzMiLCJleHAiOjE3Njk3MDM5NjQsImlzcyI6IkZ1cm5pRmxvd1V6IiwiYXVkIjoiRnVybmlGbG93VXoifQ.buYXNRvrsXowVqfEhf5Wg8N47_5n6td9riHd31U6Kdw\")",
+      "Bash(bash test_workflow.sh:*)",
+      "Bash(start cmd /c \"dotnet run > backend.log 2>&1\")",
+      "Bash(dotnet ef migrations script:*)",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiZW1haWwiOiJhZG1pbkBmdXJuaWZsb3dhdXouY29tIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiRGlyZWN0b3IiLCJ1c2VySWQiOiIxIiwiZmlyc3ROYW1lIjoiQWRtaW4iLCJsYXN0TmFtZSI6IlVzZXIiLCJqdGkiOiJkNmNjMDM3YS05Mjg1LTRjMTEtODg3OC03OThjNTUyYTJkZjciLCJleHAiOjE3Njk4ODQ5NDAsImlzcyI6IkZ1cm5pRmxvd1V6IiwiYXVkIjoiRnVybmlGbG93VXoifQ.rpO43KIY7eegeIQU8vrQoN8pUyCiDSF6xMMYb-iW2v4\")",
+      "Bash(dotnet ef dbcontext info:*)",
+      "Bash(cmd.exe /c \"taskkill /F /PID 16220\")"
     ]
   }
 }

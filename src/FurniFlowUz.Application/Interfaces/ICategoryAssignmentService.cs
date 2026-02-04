@@ -38,6 +38,12 @@ public interface ICategoryAssignmentService
     Task<CategoryAssignmentDto> CreateAsync(CreateCategoryAssignmentDto request, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Creates a simplified category assignment using category name instead of FurnitureTypeId
+    /// Auto-resolves FurnitureTypeId from category name and TeamId from team leader
+    /// </summary>
+    Task<CategoryAssignmentDto> CreateSimpleAsync(SimpleCategoryAssignmentDto request, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Updates category assignment status
     /// </summary>
     Task<CategoryAssignmentDto> UpdateStatusAsync(int id, UpdateCategoryAssignmentDto request, CancellationToken cancellationToken = default);

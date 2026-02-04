@@ -38,6 +38,8 @@ public class UnitOfWork : IUnitOfWork
     private IRepository<DetailTask>? _detailTasks;
     private IRepository<TaskPerformance>? _taskPerformances;
     private IRepository<MaterialAssignment>? _materialAssignments;
+    private IRepository<OrderCategory>? _orderCategories;
+    private IRepository<OrderImage>? _orderImages;
 
     public UnitOfWork(ApplicationDbContext context)
     {
@@ -71,6 +73,8 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<DetailTask> DetailTasks => _detailTasks ??= new Repository<DetailTask>(_context);
     public IRepository<TaskPerformance> TaskPerformances => _taskPerformances ??= new Repository<TaskPerformance>(_context);
     public IRepository<MaterialAssignment> MaterialAssignments => _materialAssignments ??= new Repository<MaterialAssignment>(_context);
+    public IRepository<OrderCategory> OrderCategories => _orderCategories ??= new Repository<OrderCategory>(_context);
+    public IRepository<OrderImage> OrderImages => _orderImages ??= new Repository<OrderImage>(_context);
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {

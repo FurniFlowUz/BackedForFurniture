@@ -26,6 +26,21 @@ public class FurnitureTypeDto
     public string OrderNumber { get; set; } = string.Empty;
 
     /// <summary>
+    /// OrderCategory identifier - links to specific order-category relationship
+    /// </summary>
+    public int? OrderCategoryId { get; set; }
+
+    /// <summary>
+    /// Category identifier (from OrderCategory)
+    /// </summary>
+    public int? CategoryId { get; set; }
+
+    /// <summary>
+    /// Category name (from OrderCategory.Category)
+    /// </summary>
+    public string? CategoryName { get; set; }
+
+    /// <summary>
     /// Details (components) for this furniture type
     /// </summary>
     public List<DetailDto> Details { get; set; } = new();

@@ -64,17 +64,17 @@ public class UsersController : ControllerBase
     }
 
     /// <summary>
-    /// Gets all available team leaders for task assignment
+    /// Gets all available team leaders for task assignment (basic info)
     /// Returns only active users with TeamLeader role
     /// </summary>
     /// <returns>List of team leaders with ID, full name, and phone</returns>
     /// <response code="200">Returns the list of available team leaders (empty list if none)</response>
     [HttpGet("team-leaders")]
-    [ProducesResponseType(typeof(ApiResponse<List<ConstructorDto>>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<List<ConstructorDto>>>> GetTeamLeaders()
+    [ProducesResponseType(typeof(ApiResponse<List<TeamLeaderDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<TeamLeaderDto>>>> GetTeamLeaders()
     {
-        var teamLeaders = await _userService.GetAvailableTeamLeadersAsync();
-        return Ok(ApiResponse<List<ConstructorDto>>.SuccessResponse(
+        var teamLeaders = await _userService.GetTeamLeadersWithStatsAsync();
+        return Ok(ApiResponse<List<TeamLeaderDto>>.SuccessResponse(
             teamLeaders,
             teamLeaders.Count > 0
                 ? $"{teamLeaders.Count} team leader(s) available"

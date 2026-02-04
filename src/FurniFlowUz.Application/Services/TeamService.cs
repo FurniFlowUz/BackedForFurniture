@@ -4,7 +4,9 @@ using FurniFlowUz.Application.Exceptions;
 using FurniFlowUz.Application.Interfaces;
 using FurniFlowUz.Domain.Entities;
 using FurniFlowUz.Domain.Enums;
+using FurniFlowUz.Infrastructure.Data;
 using FurniFlowUz.Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace FurniFlowUz.Application.Services;
 
@@ -15,22 +17,35 @@ public class TeamService : ITeamService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly ApplicationDbContext _dbContext;
 
-    public TeamService(IUnitOfWork unitOfWork, IMapper mapper)
+    public TeamService(IUnitOfWork unitOfWork, IMapper mapper, ApplicationDbContext dbContext)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _dbContext = dbContext;
     }
 
     public async Task<IEnumerable<TeamDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        var teams = await _unitOfWork.Teams.GetAllAsync(cancellationToken);
+        // Include TeamLeader and Members for proper mapping
+        var teams = await _dbContext.Teams
+            .Include(t => t.TeamLeader)
+            .Include(t => t.Members)
+            .Where(t => !t.IsDeleted)
+            .ToListAsync(cancellationToken);
         return _mapper.Map<IEnumerable<TeamDto>>(teams);
     }
 
     public async Task<TeamDto> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        var team = await _unitOfWork.Teams.GetByIdAsync(id, cancellationToken);
+        // Include TeamLeader and Members for proper mapping
+        var team = await _dbContext.Teams
+            .Include(t => t.TeamLeader)
+            .Include(t => t.Members)
+            .Where(t => !t.IsDeleted && t.Id == id)
+            .FirstOrDefaultAsync(cancellationToken);
+
         if (team == null)
         {
             throw new NotFoundException(nameof(Team), id);
@@ -164,9 +179,10 @@ public class TeamService : ITeamService
             throw new NotFoundException(nameof(User), workerId);
         }
 
-        if (worker.Role != UserRole.Worker)
+        // Allow Worker, Constructor roles to be added to teams
+        if (worker.Role != UserRole.Worker && worker.Role != UserRole.Constructor)
         {
-            throw new ValidationException("User must have Worker role.");
+            throw new ValidationException("User must have Worker or Constructor role to be a team member.");
         }
 
         if (!worker.IsActive)
@@ -174,16 +190,22 @@ public class TeamService : ITeamService
             throw new ValidationException("Worker is not active.");
         }
 
-        // Check if worker is already in the team
-        if (team.Members.Any(m => m.Id == workerId))
+        // Check if worker is already in the team using TeamMember table directly
+        var isAlreadyMember = await _dbContext.Set<Dictionary<string, object>>("TeamMember")
+            .AnyAsync(tm => EF.Property<int>(tm, "TeamId") == teamId && EF.Property<int>(tm, "UserId") == workerId, cancellationToken);
+
+        if (isAlreadyMember)
         {
             throw new ValidationException("Worker is already a member of this team.");
         }
 
-        // Add worker to team
-        team.Members.Add(worker);
-        team.UpdatedAt = DateTime.UtcNow;
+        // Add worker to team using raw SQL to insert into TeamMember table
+        await _dbContext.Database.ExecuteSqlRawAsync(
+            "INSERT INTO TeamMember (TeamId, UserId) VALUES ({0}, {1})",
+            teamId, workerId);
 
+        // Update team timestamp
+        team.UpdatedAt = DateTime.UtcNow;
         _unitOfWork.Teams.Update(team);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
@@ -196,15 +218,22 @@ public class TeamService : ITeamService
             throw new NotFoundException(nameof(Team), teamId);
         }
 
-        // Find worker in team
-        var worker = team.Members.FirstOrDefault(m => m.Id == workerId);
-        if (worker == null)
+        // Check if worker is in the team using TeamMember table directly
+        var isMember = await _dbContext.Database.ExecuteSqlRawAsync(
+            "SELECT 1 FROM TeamMember WHERE TeamId = {0} AND UserId = {1}",
+            teamId, workerId) > 0;
+
+        // Remove worker from team using raw SQL
+        var rowsAffected = await _dbContext.Database.ExecuteSqlRawAsync(
+            "DELETE FROM TeamMember WHERE TeamId = {0} AND UserId = {1}",
+            teamId, workerId);
+
+        if (rowsAffected == 0)
         {
             throw new NotFoundException("Worker is not a member of this team.");
         }
 
-        // Remove worker from team
-        team.Members.Remove(worker);
+        // Update team timestamp
         team.UpdatedAt = DateTime.UtcNow;
 
         _unitOfWork.Teams.Update(team);

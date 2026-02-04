@@ -61,6 +61,9 @@ public static class ServiceExtensions
         services.AddScoped<ITaskPerformanceService, TaskPerformanceService>();
         services.AddScoped<IMaterialAssignmentService, MaterialAssignmentService>();
 
+        // Register order category service
+        services.AddScoped<IOrderCategoryService, OrderCategoryService>();
+
         return services;
     }
 

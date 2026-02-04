@@ -91,14 +91,12 @@ public class DeadlineNotificationJob
                 }
             }
 
-            // Find contracts with production completion dates 3 days away
-            var allContracts = await _unitOfWork.Contracts.GetAllAsync();
-            var upcomingContracts = allContracts.Where(c =>
-                c.SignedDate.HasValue &&
-                c.SignedDate.Value.AddDays(c.ProductionDurationDays) >= targetDate &&
-                c.SignedDate.Value.AddDays(c.ProductionDurationDays) < targetDateEnd &&
-                c.Status != Domain.Enums.ContractStatus.Completed &&
-                c.Status != Domain.Enums.ContractStatus.Cancelled
+            // Find contracts with deadline dates 3 days away
+            var upcomingContracts = await _unitOfWork.Contracts.FindAsync(
+                c => c.DeadlineDate >= targetDate &&
+                     c.DeadlineDate < targetDateEnd &&
+                     c.Status != Domain.Enums.ContractStatus.Completed &&
+                     c.Status != Domain.Enums.ContractStatus.Cancelled
             );
 
             var contractsList = upcomingContracts.ToList();
@@ -109,8 +107,7 @@ public class DeadlineNotificationJob
             {
                 try
                 {
-                    var dueDate = contract.SignedDate?.AddDays(contract.ProductionDurationDays);
-                    var dueDateStr = dueDate?.ToString("yyyy-MM-dd") ?? "TBD";
+                    var dueDateStr = contract.DeadlineDate.ToString("yyyy-MM-dd");
 
                     // Notify Director
                     await _notificationService.CreateNotificationAsync(new CreateNotificationDto

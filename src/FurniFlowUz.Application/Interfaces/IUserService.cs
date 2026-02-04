@@ -29,6 +29,13 @@ public interface IUserService
     Task<List<ConstructorDto>> GetAvailableTeamLeadersAsync();
 
     /// <summary>
+    /// Gets all available team leaders with assignment statistics
+    /// Returns team leaders with department, position, and active assignment counts
+    /// </summary>
+    /// <returns>List of team leaders with statistics</returns>
+    Task<List<TeamLeaderDto>> GetTeamLeadersWithStatsAsync();
+
+    /// <summary>
     /// Gets all furniture types (for constructor view)
     /// Returns furniture types with basic info and counts
     /// </summary>

@@ -69,7 +69,8 @@ public class EmployeesController : ControllerBase
             .OrderBy(e => e.FullName)
             .Select(e => new
             {
-                id = e.Id,
+                id = e.UserId,  // Return User.Id instead of Employee.Id for Team.TeamLeaderId
+                employeeId = e.Id,
                 name = e.FullName
             })
             .ToListAsync(cancellationToken);

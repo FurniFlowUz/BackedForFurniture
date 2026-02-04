@@ -19,4 +19,9 @@ public class CreateFurnitureTypeDto
     /// </summary>
     [Required(ErrorMessage = "Order ID is required")]
     public int OrderId { get; set; }
+
+    /// <summary>
+    /// OrderCategory identifier (optional) - links to specific order-category relationship
+    /// </summary>
+    public int? OrderCategoryId { get; set; }
 }

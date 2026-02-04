@@ -44,6 +44,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<DetailTask> DetailTasks => Set<DetailTask>();
     public DbSet<TaskPerformance> TaskPerformances => Set<TaskPerformance>();
     public DbSet<MaterialAssignment> MaterialAssignments => Set<MaterialAssignment>();
+    public DbSet<OrderCategory> OrderCategories => Set<OrderCategory>();
+    public DbSet<OrderImage> OrderImages => Set<OrderImage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

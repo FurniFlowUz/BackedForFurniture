@@ -1,5 +1,7 @@
 using AutoMapper;
+using FurniFlowUz.Application.DTOs.Category;
 using FurniFlowUz.Application.DTOs.Constructor;
+using FurniFlowUz.Application.DTOs.Customer;
 using FurniFlowUz.Application.DTOs.Notification;
 using FurniFlowUz.Application.DTOs.Order;
 using FurniFlowUz.Application.Exceptions;
@@ -55,11 +57,106 @@ public class ConstructorService : IConstructorService
         }
 
         // Get all orders assigned to this constructor
-        var orders = await _unitOfWork.Orders.GetAllAsync(cancellationToken);
+        var allOrders = await _unitOfWork.Orders.GetAllAsync(cancellationToken);
+        var constructorOrders = allOrders
+            .Where(o => o.AssignedConstructorId == constructorId)
+            .OrderByDescending(o => o.CreatedAt)
+            .ToList();
 
-        return _mapper.Map<IEnumerable<OrderDto>>(orders.OrderByDescending(o => o.CreatedAt));
+        // Get related data
+        var orderIds = constructorOrders.Select(o => o.Id).ToList();
+
+        // Get all furniture types for these orders
+        var allFurnitureTypes = await _unitOfWork.FurnitureTypes.GetAllAsync(cancellationToken);
+        var furnitureTypesByOrder = allFurnitureTypes
+            .Where(ft => orderIds.Contains(ft.OrderId))
+            .GroupBy(ft => ft.OrderId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        // Get all categories
+        var allCategories = await _unitOfWork.Categories.GetAllAsync(cancellationToken);
+        var categoriesDict = allCategories.ToDictionary(c => c.Id);
+
+        // Get all customers
+        var customerIds = constructorOrders.Select(o => o.CustomerId).Distinct().ToList();
+        var allCustomers = await _unitOfWork.Customers.GetAllAsync(cancellationToken);
+        var customersDict = allCustomers
+            .Where(c => customerIds.Contains(c.Id))
+            .ToDictionary(c => c.Id);
+
+        // Get all order images count
+        var allOrderImages = await _unitOfWork.OrderImages.GetAllAsync(cancellationToken);
+        var imagesCountByOrder = allOrderImages
+            .Where(oi => orderIds.Contains(oi.OrderId) && !oi.IsDeleted)
+            .GroupBy(oi => oi.OrderId)
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        // Map to DTOs
+        var orderDtos = _mapper.Map<IEnumerable<OrderDto>>(constructorOrders).ToList();
+
+        // Populate related data for each order
+        foreach (var orderDto in orderDtos)
+        {
+            if (orderDto.Id.HasValue)
+            {
+                // Add furniture types
+                if (furnitureTypesByOrder.ContainsKey(orderDto.Id.Value))
+                {
+                    orderDto.FurnitureTypes = _mapper.Map<List<FurnitureTypeDto>>(
+                        furnitureTypesByOrder[orderDto.Id.Value]
+                    );
+                }
+            }
+
+            // Add category
+            var originalOrder = constructorOrders.First(o => o.Id == orderDto.Id);
+            if (categoriesDict.ContainsKey(originalOrder.CategoryId))
+            {
+                orderDto.Category = _mapper.Map<CategoryDto>(categoriesDict[originalOrder.CategoryId]);
+            }
+
+            // Add customer
+            if (customersDict.ContainsKey(originalOrder.CustomerId))
+            {
+                orderDto.Customer = _mapper.Map<CustomerDto>(customersDict[originalOrder.CustomerId]);
+            }
+
+            // Add images count
+            if (orderDto.Id.HasValue && imagesCountByOrder.ContainsKey(orderDto.Id.Value))
+            {
+                orderDto.ImagesCount = imagesCountByOrder[orderDto.Id.Value];
+            }
+        }
+
+        return orderDtos;
     }
 
+    /* public async Task<IEnumerable<OrderDto>> GetOrdersByConstructorAsync(int constructorId, CancellationToken cancellationToken = default)
+     {
+         // Validate constructor exists and has correct role
+         var constructor = await _unitOfWork.Users.GetByIdAsync(constructorId, cancellationToken);
+         if (constructor == null)
+         {
+             throw new NotFoundException(nameof(User), constructorId);
+         }
+
+         if (constructor.Role != UserRole.Constructor)
+         {
+             throw new ValidationException("User must have Constructor role.");
+         }
+
+         // Get all orders assigned to this constructor
+         var allOrders = await _unitOfWork.Orders.GetAllAsync(cancellationToken);
+         var constructorOrders = allOrders
+             .Where(o => o.AssignedConstructorId == constructorId)
+
+             .OrderByDescending(o => o.CreatedAt)
+             .ToList();
+
+         return _mapper.Map<IEnumerable<OrderDto>>(constructorOrders);
+
+     }
+ */
     public async Task<IEnumerable<FurnitureTypeDto>> GetFurnitureTypesByOrderAsync(int orderId, CancellationToken cancellationToken = default)
     {
         // Validate order exists
@@ -187,6 +284,44 @@ public class ConstructorService : IConstructorService
         }
         _unitOfWork.Drawings.RemoveRange(drawings);
 
+        _unitOfWork.FurnitureTypes.Remove(furnitureType);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task ForceDeleteFurnitureTypeAsync(int id, CancellationToken cancellationToken = default)
+    {
+        var furnitureType = await _unitOfWork.FurnitureTypes.GetByIdAsync(id, cancellationToken);
+        if (furnitureType == null)
+        {
+            throw new NotFoundException(nameof(FurnitureType), id);
+        }
+
+        // Delete associated technical specification if exists (even if locked)
+        if (furnitureType.TechnicalSpecificationId.HasValue)
+        {
+            var techSpec = await _unitOfWork.TechnicalSpecifications.GetByIdAsync(
+                furnitureType.TechnicalSpecificationId.Value,
+                cancellationToken);
+
+            if (techSpec != null)
+            {
+                _unitOfWork.TechnicalSpecifications.Remove(techSpec);
+            }
+        }
+
+        // Delete associated details
+        var details = await _unitOfWork.Details.FindAsync(d => d.FurnitureTypeId == id, cancellationToken);
+        _unitOfWork.Details.RemoveRange(details);
+
+        // Delete associated drawings and their files
+        var drawings = await _unitOfWork.Drawings.FindAsync(d => d.FurnitureTypeId == id, cancellationToken);
+        foreach (var drawing in drawings)
+        {
+            await _fileStorageService.DeleteFileAsync(drawing.FileName, "drawings");
+        }
+        _unitOfWork.Drawings.RemoveRange(drawings);
+
+        // Delete the furniture type
         _unitOfWork.FurnitureTypes.Remove(furnitureType);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
@@ -603,7 +738,7 @@ public class ConstructorService : IConstructorService
         }
 
         // If all specs are locked, update order status to SpecificationsReady
-        if (allSpecsLocked && order.Status == OrderStatus.New)
+        if (allSpecsLocked && (order.Status == OrderStatus.New || order.Status == OrderStatus.Assigned))
         {
             order.Status = OrderStatus.SpecificationsReady;
             order.UpdatedAt = DateTime.UtcNow;
@@ -745,7 +880,7 @@ public class ConstructorService : IConstructorService
         }
 
         // If all specs are locked, update order status to SpecificationsReady
-        if (allSpecsLocked && order.Status == OrderStatus.New)
+        if (allSpecsLocked && (order.Status == OrderStatus.New || order.Status == OrderStatus.Assigned))
         {
             order.Status = OrderStatus.SpecificationsReady;
             order.UpdatedAt = DateTime.UtcNow;
@@ -816,6 +951,199 @@ public class ConstructorService : IConstructorService
         {
             throw new UnauthorizedAccessException($"You do not have permission to access furniture type {furnitureTypeId}.");
         }
+    }
+
+    /// <summary>
+    /// Verifies that the current user has access to the specified order
+    /// </summary>
+    private async Task VerifyOrderAccessAsync(int orderId, CancellationToken cancellationToken)
+    {
+        if (!_currentUserService.IsAuthenticated || !_currentUserService.UserId.HasValue)
+        {
+            throw new UnauthorizedAccessException("User is not authenticated.");
+        }
+
+        var order = await _unitOfWork.Orders.GetByIdAsync(orderId, cancellationToken);
+        if (order == null)
+        {
+            throw new NotFoundException(nameof(Order), orderId);
+        }
+
+        var currentUserId = _currentUserService.UserId.Value;
+        var currentRole = _currentUserService.Role;
+
+        if (!Enum.TryParse<UserRole>(currentRole, out var userRole))
+        {
+            throw new UnauthorizedAccessException("Invalid user role.");
+        }
+
+        // Check if user is a Salesperson who has access through the contract
+        bool isSalespersonWithContractAccess = false;
+        if (userRole == UserRole.Salesperson && order.ContractId.HasValue)
+        {
+            var contract = await _unitOfWork.Contracts.GetByIdAsync(order.ContractId.Value, cancellationToken);
+            if (contract != null && contract.CreatedBy == currentUserId)
+            {
+                isSalespersonWithContractAccess = true;
+            }
+        }
+
+        var hasAccess = userRole switch
+        {
+            UserRole.Director => true,
+            UserRole.Constructor => order.AssignedConstructorId == currentUserId,
+            UserRole.ProductionManager => order.AssignedProductionManagerId == currentUserId,
+            UserRole.Salesperson => order.CreatedBy == currentUserId || isSalespersonWithContractAccess,
+            _ => false
+        };
+
+        if (!hasAccess)
+        {
+            throw new UnauthorizedAccessException($"You do not have permission to access order {orderId}.");
+        }
+    }
+
+    #endregion
+
+    #region Order Images
+
+    private static readonly string[] AllowedImageExtensions = { ".jpg", ".jpeg", ".png", ".webp" };
+    private static readonly string[] AllowedImageContentTypes = { "image/jpeg", "image/png", "image/webp" };
+    private const long MaxImageSizeBytes = 10 * 1024 * 1024; // 10MB
+
+    public async Task<OrderImageDto> UploadOrderImageAsync(UploadOrderImageRequest request, CancellationToken cancellationToken = default)
+    {
+        // Verify order exists and user has access
+        await VerifyOrderAccessAsync(request.OrderId, cancellationToken);
+
+        var order = await _unitOfWork.Orders.GetByIdAsync(request.OrderId, cancellationToken);
+        if (order == null)
+        {
+            throw new NotFoundException(nameof(Order), request.OrderId);
+        }
+
+        // Validate image type
+        if (request.ImageType != "room" && request.ImageType != "design")
+        {
+            throw new ValidationException("Image type must be 'room' or 'design'.");
+        }
+
+        // Validate file
+        if (request.File == null || request.File.Length == 0)
+        {
+            throw new ValidationException("File is required.");
+        }
+
+        if (request.File.Length > MaxImageSizeBytes)
+        {
+            throw new ValidationException($"File size exceeds maximum allowed size of {MaxImageSizeBytes / (1024 * 1024)}MB.");
+        }
+
+        var fileExtension = Path.GetExtension(request.File.FileName).ToLowerInvariant();
+        if (!AllowedImageExtensions.Contains(fileExtension))
+        {
+            throw new ValidationException($"File type not allowed. Allowed types: {string.Join(", ", AllowedImageExtensions)}");
+        }
+
+        if (!AllowedImageContentTypes.Contains(request.File.ContentType.ToLowerInvariant()))
+        {
+            throw new ValidationException($"Content type not allowed. Allowed types: {string.Join(", ", AllowedImageContentTypes)}");
+        }
+
+        // Generate unique file name
+        var uniqueFileName = $"{Guid.NewGuid()}_{Path.GetFileName(request.File.FileName)}";
+
+        // Create directory path: wwwroot/uploads/orders/{orderId}/{imageType}/
+        var relativePath = Path.Combine("uploads", "orders", request.OrderId.ToString(), request.ImageType);
+        var absolutePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", relativePath);
+
+        // Ensure directory exists
+        Directory.CreateDirectory(absolutePath);
+
+        // Full file path
+        var fullFilePath = Path.Combine(absolutePath, uniqueFileName);
+        var relativeFilePath = Path.Combine(relativePath, uniqueFileName).Replace("\\", "/");
+
+        // Save file
+        using (var stream = new FileStream(fullFilePath, FileMode.Create))
+        {
+            await request.File.CopyToAsync(stream, cancellationToken);
+        }
+
+        // Create database record
+        var orderImage = new OrderImage
+        {
+            OrderId = request.OrderId,
+            FileName = request.File.FileName,
+            FilePath = fullFilePath,
+            FileSize = request.File.Length,
+            ContentType = request.File.ContentType,
+            ImageType = request.ImageType,
+            UploadedAt = DateTime.UtcNow,
+            UploadedBy = _currentUserService.UserId,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        await _unitOfWork.OrderImages.AddAsync(orderImage, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return new OrderImageDto
+        {
+            Id = orderImage.Id,
+            FileUrl = $"/{relativeFilePath}",
+            ImageType = orderImage.ImageType,
+            FileName = orderImage.FileName,
+            FileSize = orderImage.FileSize,
+            UploadedAt = orderImage.UploadedAt
+        };
+    }
+
+    public async Task<IEnumerable<OrderImageDto>> GetOrderImagesAsync(int orderId, CancellationToken cancellationToken = default)
+    {
+        // Verify order exists and user has access
+        await VerifyOrderAccessAsync(orderId, cancellationToken);
+
+        var images = await _unitOfWork.OrderImages.FindAsync(
+            oi => oi.OrderId == orderId && !oi.IsDeleted,
+            cancellationToken);
+
+        return images.Select(img =>
+        {
+            // Convert absolute path to relative URL
+            var relativePath = Path.Combine("uploads", "orders", img.OrderId.ToString(), img.ImageType, Path.GetFileName(img.FilePath));
+
+            return new OrderImageDto
+            {
+                Id = img.Id,
+                FileUrl = $"/{relativePath.Replace("\\", "/")}",
+                ImageType = img.ImageType,
+                FileName = img.FileName,
+                FileSize = img.FileSize,
+                UploadedAt = img.UploadedAt
+            };
+        }).ToList();
+    }
+
+    public async Task DeleteOrderImageAsync(int imageId, CancellationToken cancellationToken = default)
+    {
+        var image = await _unitOfWork.OrderImages.GetByIdAsync(imageId, cancellationToken);
+        if (image == null)
+        {
+            throw new NotFoundException(nameof(OrderImage), imageId);
+        }
+
+        // Verify user has access to the order
+        await VerifyOrderAccessAsync(image.OrderId, cancellationToken);
+
+        // Delete physical file
+        if (File.Exists(image.FilePath))
+        {
+            File.Delete(image.FilePath);
+        }
+
+        // Delete database record
+        _unitOfWork.OrderImages.Remove(image);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
     #endregion

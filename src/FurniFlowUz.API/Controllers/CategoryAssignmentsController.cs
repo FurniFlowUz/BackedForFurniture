@@ -98,6 +98,28 @@ public class CategoryAssignmentsController : ControllerBase
     }
 
     /// <summary>
+    /// Creates a simple category assignment by category name (Production Manager only)
+    /// This is a simplified endpoint that auto-resolves FurnitureTypeId and TeamId
+    /// </summary>
+    [HttpPost("simple")]
+    [Authorize(Roles = "ProductionManager,Director")]
+    public async Task<ActionResult<ApiResponse<CategoryAssignmentDto>>> CreateSimple(
+        [FromBody] SimpleCategoryAssignmentDto request,
+        CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ApiResponse<CategoryAssignmentDto>.FailureResponse(
+                "Invalid request data",
+                ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList()));
+        }
+
+        var assignment = await _service.CreateSimpleAsync(request, cancellationToken);
+        return Ok(ApiResponse<CategoryAssignmentDto>.SuccessResponse(
+            assignment, "Category assigned successfully"));
+    }
+
+    /// <summary>
     /// Updates category assignment status
     /// </summary>
     [HttpPut("{id}/status")]

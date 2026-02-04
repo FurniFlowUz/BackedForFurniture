@@ -11,6 +11,13 @@ public interface IRepository<T> where T : BaseEntity
     Task<T?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets an entity by its ID with eager loading of navigation properties
+    /// </summary>
+    /// <param name="id">Entity ID</param>
+    /// <param name="includeProperties">Comma-separated list of navigation properties to include</param>
+    Task<T?> GetByIdWithIncludesAsync(int id, string includeProperties, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets all entities
     /// </summary>
     Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken = default);
@@ -75,4 +82,9 @@ public interface IRepository<T> where T : BaseEntity
         Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null,
         string includeProperties = "",
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Finds entities that match the specified predicate, ignoring global query filters (including soft delete)
+    /// </summary>
+    Task<IEnumerable<T>> FindIgnoringQueryFiltersAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default);
 }

@@ -31,6 +31,8 @@ public interface IUnitOfWork : IDisposable
     IRepository<DetailTask> DetailTasks { get; }
     IRepository<TaskPerformance> TaskPerformances { get; }
     IRepository<MaterialAssignment> MaterialAssignments { get; }
+    IRepository<OrderCategory> OrderCategories { get; }
+    IRepository<OrderImage> OrderImages { get; }
 
     /// <summary>
     /// Saves all changes made in the context to the database
