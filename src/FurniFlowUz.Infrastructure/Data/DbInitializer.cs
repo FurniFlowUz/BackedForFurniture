@@ -18,6 +18,7 @@ public static class DbInitializer
         // 1. Ensure database is created and migrations are applied
         try
         {
+            await EnsureMigrationHistoryExists(context);
             await context.Database.MigrateAsync();
         }
         catch (Exception)
@@ -346,5 +347,32 @@ public static class DbInitializer
 
         await context.WarehouseItems.AddRangeAsync(warehouseItems);
         await context.SaveChangesAsync();
+    }
+
+    private static async Task EnsureMigrationHistoryExists(ApplicationDbContext context)
+    {
+        string sql = @"
+IF EXISTS (SELECT * FROM sys.tables WHERE name = 'Categories')
+BEGIN
+    IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = '__EFMigrationsHistory')
+    BEGIN
+        CREATE TABLE [__EFMigrationsHistory] (
+            [MigrationId] nvarchar(150) NOT NULL,
+            [ProductVersion] nvarchar(32) NOT NULL,
+            CONSTRAINT [PK___EFMigrationsHistory] PRIMARY KEY ([MigrationId])
+        );
+    END
+END
+
+IF EXISTS (SELECT * FROM sys.tables WHERE name = 'Categories')
+BEGIN
+    IF NOT EXISTS (SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = '20260216131707_InitialCreate')
+    BEGIN
+        INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+        VALUES ('20260216131707_InitialCreate', '8.0.0');
+    END
+END
+";
+        await context.Database.ExecuteSqlRawAsync(sql);
     }
 }
