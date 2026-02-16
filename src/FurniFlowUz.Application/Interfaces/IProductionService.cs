@@ -53,4 +53,29 @@ public interface IProductionService
     /// Task N+1 cannot be started until Task N is completed
     /// </summary>
     Task<bool> ValidateTaskSequenceAsync(int taskId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets all production stages
+    /// </summary>
+    Task<IEnumerable<ProductionStageDto>> GetAllStagesAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets all tasks for a specific category assignment
+    /// </summary>
+    Task<IEnumerable<WorkTaskDto>> GetTasksByAssignmentAsync(int assignmentId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Starts a task (changes status from Pending to InProgress)
+    /// </summary>
+    Task StartTaskAsync(int taskId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Creates tasks for all production stages for a given assignment
+    /// </summary>
+    Task CreateTasksForAssignmentAsync(int assignmentId, int orderId, int teamId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets tasks by order ID
+    /// </summary>
+    Task<IEnumerable<WorkTaskDto>> GetTasksByOrderAsync(int orderId, CancellationToken cancellationToken = default);
 }

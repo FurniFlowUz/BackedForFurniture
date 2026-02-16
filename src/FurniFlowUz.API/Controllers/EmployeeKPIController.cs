@@ -29,7 +29,7 @@ public class EmployeeKPIController : ControllerBase
     /// Gets KPI metrics for current employee
     /// </summary>
     [HttpGet("my-kpi")]
-    [Authorize(Roles = "Worker,TeamLeader")]
+    [Authorize(Roles = "Employee,Worker,TeamLeader")]
     public async Task<ActionResult<ApiResponse<EmployeeKPIDto>>> GetMyKPI(
         [FromQuery] DateTime? periodStart,
         [FromQuery] DateTime? periodEnd,

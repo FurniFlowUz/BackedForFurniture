@@ -220,6 +220,50 @@ public class DetailTaskService : IDetailTaskService
         return await GetByIdAsync(task.Id, cancellationToken);
     }
 
+    public async Task<DetailTaskDto> CreateSimpleAsync(CreateSimpleDetailTaskDto request, CancellationToken cancellationToken = default)
+    {
+        // Validate category assignment exists
+        var assignment = await _unitOfWork.CategoryAssignments.GetByIdAsync(request.CategoryAssignmentId, cancellationToken);
+        if (assignment == null)
+        {
+            throw new NotFoundException(nameof(CategoryAssignment), request.CategoryAssignmentId);
+        }
+
+        // Get next sequence number
+        var existingTasks = await _unitOfWork.DetailTasks.GetPagedAsync(
+            pageNumber: 1,
+            pageSize: 10000,
+            filter: t => t.CategoryAssignmentId == request.CategoryAssignmentId,
+            cancellationToken: cancellationToken);
+        var nextSequence = existingTasks.Any() ? existingTasks.Max(t => t.Sequence) + 1 : 1;
+
+        // Validate employee if provided
+        if (request.AssignedEmployeeId.HasValue)
+        {
+            var employee = await _unitOfWork.Users.GetByIdAsync(request.AssignedEmployeeId.Value, cancellationToken);
+            if (employee == null || !employee.IsActive)
+            {
+                throw new ValidationException("Invalid or inactive employee specified.");
+            }
+        }
+
+        var task = new DetailTask
+        {
+            CategoryAssignmentId = request.CategoryAssignmentId,
+            TaskDescription = request.Title + (string.IsNullOrEmpty(request.Description) ? "" : $"\n{request.Description}"),
+            Sequence = nextSequence,
+            EstimatedDuration = request.EstimatedMinutes.HasValue ? TimeSpan.FromMinutes(request.EstimatedMinutes.Value) : null,
+            Status = request.AssignedEmployeeId.HasValue ? DetailTaskStatus.Ready : DetailTaskStatus.Pending,
+            AssignedEmployeeId = request.AssignedEmployeeId,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        await _unitOfWork.DetailTasks.AddAsync(task, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return await GetByIdAsync(task.Id, cancellationToken);
+    }
+
     public async Task<DetailTaskDto> UpdateStatusAsync(int id, UpdateDetailTaskDto request, CancellationToken cancellationToken = default)
     {
         var task = await _unitOfWork.DetailTasks.GetByIdAsync(id, cancellationToken);
@@ -229,6 +273,18 @@ public class DetailTaskService : IDetailTaskService
         }
 
         task.Status = request.Status;
+
+        // Update assigned employee if provided
+        if (request.AssignedEmployeeId.HasValue)
+        {
+            var employee = await _unitOfWork.Users.GetByIdAsync(request.AssignedEmployeeId.Value, cancellationToken);
+            if (employee == null || !employee.IsActive)
+            {
+                throw new ValidationException("Invalid or inactive employee specified.");
+            }
+            task.AssignedEmployeeId = request.AssignedEmployeeId;
+        }
+
         _unitOfWork.DetailTasks.Update(task);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

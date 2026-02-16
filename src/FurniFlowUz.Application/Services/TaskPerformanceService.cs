@@ -167,7 +167,7 @@ public class TaskPerformanceService : ITaskPerformanceService
         var completedTasks = await _unitOfWork.DetailTasks.GetPagedAsync(
             pageNumber: 1,
             pageSize: 10000,
-            filter: t => teamMemberIds.Contains(t.AssignedEmployeeId) &&
+            filter: t => t.AssignedEmployeeId.HasValue && teamMemberIds.Contains(t.AssignedEmployeeId.Value) &&
                         (t.Status == DetailTaskStatus.Completed || t.Status == DetailTaskStatus.QCPassed) &&
                         t.CompletedAt.HasValue &&
                         t.CompletedAt.Value >= start &&
@@ -249,7 +249,7 @@ public class TaskPerformanceService : ITaskPerformanceService
             {
                 teamKPI.TopPerformers.Add(new EmployeePerformanceSummary
                 {
-                    EmployeeId = emp.EmployeeId,
+                    EmployeeId = emp.EmployeeId ?? 0,
                     EmployeeName = emp.Employee != null ? $"{emp.Employee.FirstName} {emp.Employee.LastName}".Trim() : "",
                     TasksCompleted = emp.Tasks.Count,
                     AverageEfficiency = Math.Round(empPerformances.Average(p => p.EfficiencyPercent), 2),
@@ -356,7 +356,7 @@ public class TaskPerformanceService : ITaskPerformanceService
             {
                 companyKPI.TopPerformers.Add(new EmployeePerformanceSummary
                 {
-                    EmployeeId = emp.EmployeeId,
+                    EmployeeId = emp.EmployeeId ?? 0,
                     EmployeeName = emp.Employee != null ? $"{emp.Employee.FirstName} {emp.Employee.LastName}".Trim() : "",
                     TasksCompleted = emp.Tasks.Count,
                     AverageEfficiency = Math.Round(empPerformances.Average(p => p.EfficiencyPercent), 2),

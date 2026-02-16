@@ -76,7 +76,7 @@ public static class ServiceExtensions
     {
         // Register DbContext
         services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseSqlServer(
+            options.UseNpgsql(
                 configuration.GetConnectionString("DefaultConnection"),
                 b => b.MigrationsAssembly("FurniFlowUz.Infrastructure")));
 

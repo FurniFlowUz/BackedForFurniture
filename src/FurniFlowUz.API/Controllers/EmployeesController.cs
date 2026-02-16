@@ -13,7 +13,7 @@ namespace FurniFlowUz.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Director,ProductionManager")]
+[Authorize(Roles = "Director,ProductionManager,TeamLeader")]
 public class EmployeesController : ControllerBase
 {
     private readonly IEmployeeService _employeeService;

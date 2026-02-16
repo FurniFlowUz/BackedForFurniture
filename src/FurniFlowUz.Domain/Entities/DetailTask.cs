@@ -13,11 +13,9 @@ public class DetailTask : BaseAuditableEntity
     [Required]
     public int CategoryAssignmentId { get; set; }
 
-    [Required]
-    public int DetailId { get; set; }
+    public int? DetailId { get; set; }
 
-    [Required]
-    public int AssignedEmployeeId { get; set; }
+    public int? AssignedEmployeeId { get; set; }
 
     /// <summary>
     /// Sequence number for task ordering (1, 2, 3, ...)
@@ -51,10 +49,10 @@ public class DetailTask : BaseAuditableEntity
     public CategoryAssignment CategoryAssignment { get; set; } = null!;
 
     [ForeignKey(nameof(DetailId))]
-    public Detail Detail { get; set; } = null!;
+    public Detail? Detail { get; set; }
 
     [ForeignKey(nameof(AssignedEmployeeId))]
-    public User AssignedEmployee { get; set; } = null!;
+    public User? AssignedEmployee { get; set; }
 
     [ForeignKey(nameof(DependsOnTaskId))]
     public DetailTask? DependsOnTask { get; set; }

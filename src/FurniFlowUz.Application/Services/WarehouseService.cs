@@ -263,8 +263,8 @@ public class WarehouseService : IWarehouseService
         // Send notification to team leader for material confirmation
         await _notificationService.CreateNotificationAsync(new CreateNotificationDto
         {
-            Title = "Material Request Confirmation Required",
-            Message = $"Please confirm receipt of {request.Quantity} {item.Unit} of {item.Name}.",
+            Title = "Material Qabul Qilishni Tasdiqlang",
+            Message = $"{item.Name} dan {request.Quantity} {item.Unit} qabul qilganingizni tasdiqlang.",
             Type = NotificationType.MaterialConfirmationPending.ToString(),
             UserId = team.TeamLeaderId
         }, cancellationToken);
@@ -274,16 +274,16 @@ public class WarehouseService : IWarehouseService
         {
             await _notificationService.CreateNotificationAsync(new CreateNotificationDto
             {
-                Title = "Low Stock Alert",
-                Message = $"Warehouse item '{item.Name}' is below minimum stock level. Current: {item.CurrentStock}, Minimum: {item.MinimumStock}",
+                Title = "Kam Zaxira Ogohlantirish",
+                Message = $"'{item.Name}' ombor mahsuloti minimal zaxira darajasidan past. Joriy: {item.CurrentStock}, Minimal: {item.MinimumStock}",
                 Type = NotificationType.MaterialShortage.ToString(),
                 Role = UserRole.Director.ToString()
             }, cancellationToken);
 
             await _notificationService.CreateNotificationAsync(new CreateNotificationDto
             {
-                Title = "Low Stock Alert",
-                Message = $"Warehouse item '{item.Name}' is below minimum stock level. Current: {item.CurrentStock}, Minimum: {item.MinimumStock}",
+                Title = "Kam Zaxira Ogohlantirish",
+                Message = $"'{item.Name}' ombor mahsuloti minimal zaxira darajasidan past. Joriy: {item.CurrentStock}, Minimal: {item.MinimumStock}",
                 Type = NotificationType.MaterialShortage.ToString(),
                 Role = UserRole.WarehouseManager.ToString()
             }, cancellationToken);
@@ -307,7 +307,7 @@ public class WarehouseService : IWarehouseService
             MinimumStock = item.MinimumStock,
             Unit = item.Unit.ToString(),
             Shortage = item.MinimumStock - item.CurrentStock,
-            AlertMessage = $"{item.Name} is below minimum stock level"
+            AlertMessage = $"{item.Name} minimal zaxira darajasidan past"
         });
 
         return alerts;

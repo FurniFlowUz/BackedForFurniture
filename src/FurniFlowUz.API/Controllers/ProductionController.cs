@@ -253,7 +253,7 @@ public class ProductionController : ControllerBase
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Success response</returns>
     [HttpPost("tasks/{id}/complete")]
-    [Authorize(Roles = "Worker,TeamLeader")]
+    [Authorize(Roles = "Worker,TeamLeader,ProductionManager")]
     public async Task<ActionResult<ApiResponse<object>>> CompleteTask(
         [FromRoute] int id,
         [FromBody] CompleteTaskDto request,
@@ -269,4 +269,101 @@ public class ProductionController : ControllerBase
         await _productionService.CompleteTaskAsync(id, request, cancellationToken);
         return Ok(ApiResponse<object>.SuccessResponse(null, "Task completed successfully"));
     }
+
+    /// <summary>
+    /// Gets all production stages
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>List of all production stages</returns>
+    [HttpGet("stages")]
+    public async Task<ActionResult<ApiResponse<IEnumerable<ProductionStageDto>>>> GetStages(
+        CancellationToken cancellationToken)
+    {
+        var stages = await _productionService.GetAllStagesAsync(cancellationToken);
+        return Ok(ApiResponse<IEnumerable<ProductionStageDto>>.SuccessResponse(stages, "Stages retrieved successfully"));
+    }
+
+    /// <summary>
+    /// Gets tasks by assignment ID
+    /// </summary>
+    /// <param name="assignmentId">Assignment ID</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>List of work tasks for the assignment</returns>
+    [HttpGet("tasks/assignment/{assignmentId}")]
+    public async Task<ActionResult<ApiResponse<IEnumerable<WorkTaskDto>>>> GetTasksByAssignment(
+        [FromRoute] int assignmentId,
+        CancellationToken cancellationToken)
+    {
+        var tasks = await _productionService.GetTasksByAssignmentAsync(assignmentId, cancellationToken);
+        return Ok(ApiResponse<IEnumerable<WorkTaskDto>>.SuccessResponse(tasks, "Tasks retrieved successfully"));
+    }
+
+    /// <summary>
+    /// Gets tasks by order ID
+    /// </summary>
+    /// <param name="orderId">Order ID</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>List of work tasks for the order</returns>
+    [HttpGet("tasks/order/{orderId}")]
+    public async Task<ActionResult<ApiResponse<IEnumerable<WorkTaskDto>>>> GetTasksByOrder(
+        [FromRoute] int orderId,
+        CancellationToken cancellationToken)
+    {
+        var tasks = await _productionService.GetTasksByOrderAsync(orderId, cancellationToken);
+        return Ok(ApiResponse<IEnumerable<WorkTaskDto>>.SuccessResponse(tasks, "Tasks retrieved successfully"));
+    }
+
+    /// <summary>
+    /// Starts a task (changes status from Pending to InProgress)
+    /// </summary>
+    /// <param name="id">Task ID</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Success response</returns>
+    [HttpPut("tasks/{id}/start")]
+    [Authorize(Roles = "Worker,TeamLeader,ProductionManager")]
+    public async Task<ActionResult<ApiResponse<object>>> StartTask(
+        [FromRoute] int id,
+        CancellationToken cancellationToken)
+    {
+        await _productionService.StartTaskAsync(id, cancellationToken);
+        return Ok(ApiResponse<object>.SuccessResponse(null, "Task started successfully"));
+    }
+
+    /// <summary>
+    /// Creates tasks for all production stages for a given assignment
+    /// </summary>
+    /// <param name="request">Request containing assignment, order, and team IDs</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Success response</returns>
+    [HttpPost("tasks/create-for-assignment")]
+    [Authorize(Roles = "ProductionManager,Director")]
+    public async Task<ActionResult<ApiResponse<object>>> CreateTasksForAssignment(
+        [FromBody] CreateTasksForAssignmentDto request,
+        CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ApiResponse<object>.FailureResponse(
+                "Invalid request data",
+                ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList()));
+        }
+
+        await _productionService.CreateTasksForAssignmentAsync(
+            request.AssignmentId,
+            request.OrderId,
+            request.TeamId,
+            cancellationToken);
+
+        return Ok(ApiResponse<object>.SuccessResponse(null, "Tasks created successfully"));
+    }
+}
+
+/// <summary>
+/// DTO for creating tasks for an assignment
+/// </summary>
+public class CreateTasksForAssignmentDto
+{
+    public int AssignmentId { get; set; }
+    public int OrderId { get; set; }
+    public int TeamId { get; set; }
 }

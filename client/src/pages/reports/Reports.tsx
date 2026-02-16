@@ -9,7 +9,6 @@ import {
   BarChart3,
   TrendingUp,
   Package,
-  Users,
   DollarSign,
 } from 'lucide-react';
 

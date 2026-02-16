@@ -39,6 +39,11 @@ public interface IDetailTaskService
     Task<DetailTaskDto> CreateAsync(CreateDetailTaskDto request, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Creates a new detail task with simplified data (from TeamLeader UI)
+    /// </summary>
+    Task<DetailTaskDto> CreateSimpleAsync(CreateSimpleDetailTaskDto request, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Updates task status
     /// </summary>
     Task<DetailTaskDto> UpdateStatusAsync(int id, UpdateDetailTaskDto request, CancellationToken cancellationToken = default);

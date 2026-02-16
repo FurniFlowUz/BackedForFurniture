@@ -55,7 +55,7 @@ public class DetailTasksController : ControllerBase
     /// Gets task queue for current employee
     /// </summary>
     [HttpGet("my-tasks")]
-    [Authorize(Roles = "Employee,TeamLeader")]
+    [Authorize(Roles = "Employee,Worker,TeamLeader")]
     public async Task<ActionResult<ApiResponse<EmployeeTaskQueueDto>>> GetMyTaskQueue(
         CancellationToken cancellationToken)
     {
@@ -80,7 +80,7 @@ public class DetailTasksController : ControllerBase
     /// Gets next available task for current employee
     /// </summary>
     [HttpGet("next")]
-    [Authorize(Roles = "Employee,TeamLeader")]
+    [Authorize(Roles = "Employee,Worker,TeamLeader")]
     public async Task<ActionResult<ApiResponse<DetailTaskDto?>>> GetNextTask(
         CancellationToken cancellationToken)
     {
@@ -89,9 +89,9 @@ public class DetailTasksController : ControllerBase
     }
 
     /// <summary>
-    /// Creates a new detail task (Team Leader only)
+    /// Creates a new detail task (Team Leader only) - Full version
     /// </summary>
-    [HttpPost]
+    [HttpPost("full")]
     [Authorize(Roles = "TeamLeader,ProductionManager,Director")]
     public async Task<ActionResult<ApiResponse<DetailTaskDto>>> Create(
         [FromBody] CreateDetailTaskDto request,
@@ -105,6 +105,26 @@ public class DetailTasksController : ControllerBase
         }
 
         var task = await _service.CreateAsync(request, cancellationToken);
+        return Ok(ApiResponse<DetailTaskDto>.SuccessResponse(task, "Task created successfully"));
+    }
+
+    /// <summary>
+    /// Creates a new detail task (Team Leader only) - Simplified version
+    /// </summary>
+    [HttpPost]
+    [Authorize(Roles = "TeamLeader,ProductionManager,Director")]
+    public async Task<ActionResult<ApiResponse<DetailTaskDto>>> CreateSimple(
+        [FromBody] CreateSimpleDetailTaskDto request,
+        CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ApiResponse<DetailTaskDto>.FailureResponse(
+                "Invalid request data",
+                ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList()));
+        }
+
+        var task = await _service.CreateSimpleAsync(request, cancellationToken);
         return Ok(ApiResponse<DetailTaskDto>.SuccessResponse(task, "Task created successfully"));
     }
 
@@ -132,7 +152,7 @@ public class DetailTasksController : ControllerBase
     /// Starts a task (Employee begins work)
     /// </summary>
     [HttpPut("{id}/start")]
-    [Authorize(Roles = "Employee,TeamLeader")]
+    [Authorize(Roles = "Employee,Worker,TeamLeader")]
     public async Task<ActionResult<ApiResponse<DetailTaskDto>>> StartTask(
         [FromRoute] int id,
         CancellationToken cancellationToken)
@@ -145,7 +165,7 @@ public class DetailTasksController : ControllerBase
     /// Completes a task and records performance
     /// </summary>
     [HttpPost("{id}/complete")]
-    [Authorize(Roles = "Employee,TeamLeader")]
+    [Authorize(Roles = "Employee,Worker,TeamLeader")]
     public async Task<ActionResult<ApiResponse<DetailTaskDto>>> CompleteTask(
         [FromRoute] int id,
         [FromBody] CreateTaskPerformanceDto performanceData,

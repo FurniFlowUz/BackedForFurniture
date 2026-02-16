@@ -11,7 +11,6 @@ import { technicalSpecService } from '@/services/technicalSpecService';
 import { orderService } from '@/services/orderService';
 import { CreateTechnicalSpecificationDto } from '@/types';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 

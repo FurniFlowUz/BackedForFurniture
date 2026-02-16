@@ -749,8 +749,8 @@ public class ConstructorService : IConstructorService
             {
                 await _notificationService.CreateNotificationAsync(new CreateNotificationDto
                 {
-                    Title = "Technical Specifications Completed",
-                    Message = $"All technical specifications for order {order.OrderNumber} are completed and ready for production.",
+                    Title = "Texnik Spetsifikatsiyalar Tayyor",
+                    Message = $"{order.OrderNumber} buyurtma uchun barcha texnik spetsifikatsiyalar tayyor va ishlab chiqarishga tayyorlangan.",
                     Type = NotificationType.OrderStatusChanged.ToString(),
                     UserId = order.AssignedProductionManagerId.Value,
                     RelatedEntityType = "Order",
@@ -891,8 +891,8 @@ public class ConstructorService : IConstructorService
             {
                 await _notificationService.CreateNotificationAsync(new CreateNotificationDto
                 {
-                    Title = "Technical Specifications Completed",
-                    Message = $"All technical specifications for order {order.OrderNumber} are completed and ready for production.",
+                    Title = "Texnik Spetsifikatsiyalar Tayyor",
+                    Message = $"{order.OrderNumber} buyurtma uchun barcha texnik spetsifikatsiyalar tayyor va ishlab chiqarishga tayyorlangan.",
                     Type = NotificationType.OrderStatusChanged.ToString(),
                     UserId = order.AssignedProductionManagerId.Value,
                     RelatedEntityType = "Order",

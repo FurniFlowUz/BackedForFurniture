@@ -41,4 +41,9 @@ public interface ITeamService
     /// Removes a worker from a team
     /// </summary>
     Task RemoveMemberAsync(int teamId, int workerId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets teams where the specified user is the team leader
+    /// </summary>
+    Task<IEnumerable<TeamDto>> GetTeamsByLeaderIdAsync(int leaderId, CancellationToken cancellationToken = default);
 }

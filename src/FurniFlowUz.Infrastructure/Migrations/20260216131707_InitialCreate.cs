@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
+#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
+
 namespace FurniFlowUz.Infrastructure.Migrations
 {
     /// <inheritdoc />
@@ -19,6 +21,10 @@ namespace FurniFlowUz.Infrastructure.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    RetailPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    WholesalePrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    MinAdvancePercent = table.Column<decimal>(type: "decimal(5,2)", nullable: false),
+                    StandardProductionDays = table.Column<int>(type: "int", nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -58,6 +64,27 @@ namespace FurniFlowUz.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Departments",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedBy = table.Column<int>(type: "int", nullable: true),
+                    UpdatedBy = table.Column<int>(type: "int", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    DeletedBy = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Departments", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "KPIs",
                 columns: table => new
                 {
@@ -80,6 +107,27 @@ namespace FurniFlowUz.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_KPIs", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Positions",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedBy = table.Column<int>(type: "int", nullable: true),
+                    UpdatedBy = table.Column<int>(type: "int", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    DeletedBy = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Positions", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -162,6 +210,38 @@ namespace FurniFlowUz.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "FurnitureTypeTemplates",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    CategoryId = table.Column<int>(type: "int", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    DefaultMaterial = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    DefaultNotes = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    DisplayOrder = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedBy = table.Column<int>(type: "int", nullable: true),
+                    UpdatedBy = table.Column<int>(type: "int", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    DeletedBy = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FurnitureTypeTemplates", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_FurnitureTypeTemplates_Categories_CategoryId",
+                        column: x => x.CategoryId,
+                        principalTable: "Categories",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Contracts",
                 columns: table => new
                 {
@@ -169,16 +249,18 @@ namespace FurniFlowUz.Infrastructure.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     ContractNumber = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     CustomerId = table.Column<int>(type: "int", nullable: false),
-                    CategoryId = table.Column<int>(type: "int", nullable: false),
+                    CategoryIds = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
                     TotalAmount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    AdvancePaymentPercentage = table.Column<decimal>(type: "decimal(5,2)", precision: 5, scale: 2, nullable: false),
                     AdvancePaymentAmount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     RemainingAmount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     PaymentStatus = table.Column<int>(type: "int", nullable: false),
                     Status = table.Column<int>(type: "int", nullable: false),
-                    Deadline = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DeadlineDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     SignedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    Notes = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    DeliveryTerms = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
+                    PenaltyTerms = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
+                    AdditionalNotes = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
+                    RequiresApproval = table.Column<bool>(type: "bit", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     CreatedBy = table.Column<int>(type: "int", nullable: true),
@@ -190,12 +272,6 @@ namespace FurniFlowUz.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Contracts", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Contracts_Categories_CategoryId",
-                        column: x => x.CategoryId,
-                        principalTable: "Categories",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Contracts_Customers_CustomerId",
                         column: x => x.CustomerId,
@@ -230,6 +306,52 @@ namespace FurniFlowUz.Infrastructure.Migrations
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Employees",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    FullName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Phone = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
+                    PositionId = table.Column<int>(type: "int", nullable: false),
+                    DepartmentId = table.Column<int>(type: "int", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    ActiveTasks = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
+                    CompletedTasks = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
+                    OnTimePercent = table.Column<decimal>(type: "decimal(5,2)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedBy = table.Column<int>(type: "int", nullable: true),
+                    UpdatedBy = table.Column<int>(type: "int", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    DeletedBy = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Employees", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Employees_Departments_DepartmentId",
+                        column: x => x.DepartmentId,
+                        principalTable: "Departments",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Employees_Positions_PositionId",
+                        column: x => x.PositionId,
+                        principalTable: "Positions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Employees_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -423,16 +545,48 @@ namespace FurniFlowUz.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "FurnitureTypes",
+                name: "OrderCategories",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     OrderId = table.Column<int>(type: "int", nullable: false),
-                    ProgressPercentage = table.Column<decimal>(type: "decimal(5,2)", precision: 5, scale: 2, nullable: false, defaultValue: 0m),
-                    TechnicalSpecificationId = table.Column<int>(type: "int", nullable: true),
-                    Notes = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    CategoryId = table.Column<int>(type: "int", nullable: false),
+                    DeadlineDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_OrderCategories", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_OrderCategories_Categories_CategoryId",
+                        column: x => x.CategoryId,
+                        principalTable: "Categories",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_OrderCategories_Orders_OrderId",
+                        column: x => x.OrderId,
+                        principalTable: "Orders",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "OrderImages",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    OrderId = table.Column<int>(type: "int", nullable: false),
+                    FileName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    FilePath = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    FileSize = table.Column<long>(type: "bigint", nullable: false),
+                    ContentType = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    ImageType = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    UploadedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UploadedBy = table.Column<int>(type: "int", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     CreatedBy = table.Column<int>(type: "int", nullable: true),
@@ -443,13 +597,19 @@ namespace FurniFlowUz.Infrastructure.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_FurnitureTypes", x => x.Id);
+                    table.PrimaryKey("PK_OrderImages", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_FurnitureTypes_Orders_OrderId",
+                        name: "FK_OrderImages_Orders_OrderId",
                         column: x => x.OrderId,
                         principalTable: "Orders",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_OrderImages_Users_UploadedBy",
+                        column: x => x.UploadedBy,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateTable(
@@ -500,6 +660,160 @@ namespace FurniFlowUz.Infrastructure.Migrations
                         principalTable: "WarehouseTransactions",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "FurnitureTypes",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    OrderId = table.Column<int>(type: "int", nullable: false),
+                    OrderCategoryId = table.Column<int>(type: "int", nullable: true),
+                    ProgressPercentage = table.Column<decimal>(type: "decimal(5,2)", precision: 5, scale: 2, nullable: false, defaultValue: 0m),
+                    TechnicalSpecificationId = table.Column<int>(type: "int", nullable: true),
+                    TemplateId = table.Column<int>(type: "int", nullable: true),
+                    Quantity = table.Column<int>(type: "int", nullable: false),
+                    Notes = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedBy = table.Column<int>(type: "int", nullable: true),
+                    UpdatedBy = table.Column<int>(type: "int", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    DeletedBy = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FurnitureTypes", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_FurnitureTypes_FurnitureTypeTemplates_TemplateId",
+                        column: x => x.TemplateId,
+                        principalTable: "FurnitureTypeTemplates",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_FurnitureTypes_OrderCategories_OrderCategoryId",
+                        column: x => x.OrderCategoryId,
+                        principalTable: "OrderCategories",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_FurnitureTypes_Orders_OrderId",
+                        column: x => x.OrderId,
+                        principalTable: "Orders",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "MaterialAssignments",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    MaterialRequestId = table.Column<int>(type: "int", nullable: false),
+                    WarehouseItemId = table.Column<int>(type: "int", nullable: false),
+                    Quantity = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    AssignedToTeamId = table.Column<int>(type: "int", nullable: true),
+                    AssignedToEmployeeId = table.Column<int>(type: "int", nullable: true),
+                    AssignedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ReceivedConfirmed = table.Column<bool>(type: "bit", nullable: false),
+                    ReceivedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ReceivedByUserId = table.Column<int>(type: "int", nullable: true),
+                    Notes = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedBy = table.Column<int>(type: "int", nullable: true),
+                    UpdatedBy = table.Column<int>(type: "int", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    DeletedBy = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_MaterialAssignments", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_MaterialAssignments_MaterialRequests_MaterialRequestId",
+                        column: x => x.MaterialRequestId,
+                        principalTable: "MaterialRequests",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_MaterialAssignments_Teams_AssignedToTeamId",
+                        column: x => x.AssignedToTeamId,
+                        principalTable: "Teams",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_MaterialAssignments_Users_AssignedToEmployeeId",
+                        column: x => x.AssignedToEmployeeId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_MaterialAssignments_Users_ReceivedByUserId",
+                        column: x => x.ReceivedByUserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_MaterialAssignments_WarehouseItems_WarehouseItemId",
+                        column: x => x.WarehouseItemId,
+                        principalTable: "WarehouseItems",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CategoryAssignments",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    OrderId = table.Column<int>(type: "int", nullable: false),
+                    FurnitureTypeId = table.Column<int>(type: "int", nullable: false),
+                    TeamLeaderId = table.Column<int>(type: "int", nullable: false),
+                    TeamId = table.Column<int>(type: "int", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    AssignedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    StartedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CompletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Notes = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedBy = table.Column<int>(type: "int", nullable: true),
+                    UpdatedBy = table.Column<int>(type: "int", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    DeletedBy = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CategoryAssignments", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CategoryAssignments_FurnitureTypes_FurnitureTypeId",
+                        column: x => x.FurnitureTypeId,
+                        principalTable: "FurnitureTypes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_CategoryAssignments_Orders_OrderId",
+                        column: x => x.OrderId,
+                        principalTable: "Orders",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_CategoryAssignments_Teams_TeamId",
+                        column: x => x.TeamId,
+                        principalTable: "Teams",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_CategoryAssignments_Users_TeamLeaderId",
+                        column: x => x.TeamLeaderId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -657,6 +971,112 @@ namespace FurniFlowUz.Infrastructure.Migrations
                         onDelete: ReferentialAction.Restrict);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "DetailTasks",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CategoryAssignmentId = table.Column<int>(type: "int", nullable: false),
+                    DetailId = table.Column<int>(type: "int", nullable: true),
+                    AssignedEmployeeId = table.Column<int>(type: "int", nullable: true),
+                    Sequence = table.Column<int>(type: "int", nullable: false),
+                    DependsOnTaskId = table.Column<int>(type: "int", nullable: true),
+                    TaskDescription = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    EstimatedDuration = table.Column<TimeSpan>(type: "time", nullable: true),
+                    StartedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CompletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Notes = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedBy = table.Column<int>(type: "int", nullable: true),
+                    UpdatedBy = table.Column<int>(type: "int", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    DeletedBy = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DetailTasks", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_DetailTasks_CategoryAssignments_CategoryAssignmentId",
+                        column: x => x.CategoryAssignmentId,
+                        principalTable: "CategoryAssignments",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_DetailTasks_DetailTasks_DependsOnTaskId",
+                        column: x => x.DependsOnTaskId,
+                        principalTable: "DetailTasks",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_DetailTasks_Details_DetailId",
+                        column: x => x.DetailId,
+                        principalTable: "Details",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_DetailTasks_Users_AssignedEmployeeId",
+                        column: x => x.AssignedEmployeeId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TaskPerformances",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    DetailTaskId = table.Column<int>(type: "int", nullable: false),
+                    ActualDuration = table.Column<TimeSpan>(type: "time", nullable: false),
+                    EfficiencyPercent = table.Column<decimal>(type: "decimal(5,2)", nullable: false),
+                    QualityScore = table.Column<int>(type: "int", nullable: false),
+                    RequiredRework = table.Column<bool>(type: "bit", nullable: false),
+                    ReworkReason = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    CompletedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedBy = table.Column<int>(type: "int", nullable: true),
+                    UpdatedBy = table.Column<int>(type: "int", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    DeletedBy = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TaskPerformances", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_TaskPerformances_DetailTasks_DetailTaskId",
+                        column: x => x.DetailTaskId,
+                        principalTable: "DetailTasks",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.InsertData(
+                table: "ProductionStages",
+                columns: new[] { "Id", "CreatedAt", "CreatedBy", "DeletedAt", "DeletedBy", "Description", "EstimatedDurationHours", "IsActive", "IsDeleted", "Name", "SequenceOrder", "StageType", "UpdatedAt", "UpdatedBy" },
+                values: new object[,]
+                {
+                    { 1, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, "O'lchov va kesish ishlari", 2m, true, false, "Razmer", 1, 0, null, null },
+                    { 2, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, "Arra bilan kesish", 3m, true, false, "Arra", 2, 0, null, null },
+                    { 3, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, "Shipon bilan ishlash", 2m, true, false, "Shipon", 3, 1, null, null },
+                    { 4, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, "Pres ishlari", 2m, true, false, "Pres", 4, 1, null, null },
+                    { 5, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, "Rover stanogida ishlash", 3m, true, false, "Rover", 5, 1, null, null },
+                    { 6, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, "Qirralarni yopish", 2m, true, false, "Kromka", 6, 2, null, null },
+                    { 7, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, "Silliqlash ishlari", 3m, true, false, "Shkurka", 7, 3, null, null },
+                    { 8, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, "Pardozlash tayyorlash", 2m, true, false, "Pardozchi", 8, 5, null, null },
+                    { 9, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, "Grunt qoplash", 2m, true, false, "Grunt", 9, 5, null, null },
+                    { 10, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, "Grunt silliqlash", 2m, true, false, "Grunt shkurka", 10, 5, null, null },
+                    { 11, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, "Bo'yash", 3m, true, false, "Kraska", 11, 6, null, null },
+                    { 12, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, "Quritish", 4m, true, false, "Qurutish", 12, 6, null, null },
+                    { 13, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, "Sifat nazorati", 1m, true, false, "OTK", 13, 7, null, null },
+                    { 14, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, "Qadoqlash ishlari", 2m, true, false, "Qadoqlash", 14, 4, null, null }
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_AuditLogs_Action",
                 table: "AuditLogs",
@@ -698,9 +1118,29 @@ namespace FurniFlowUz.Infrastructure.Migrations
                 column: "Name");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Contracts_CategoryId",
-                table: "Contracts",
-                column: "CategoryId");
+                name: "IX_CategoryAssignments_FurnitureTypeId",
+                table: "CategoryAssignments",
+                column: "FurnitureTypeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CategoryAssignments_OrderId",
+                table: "CategoryAssignments",
+                column: "OrderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CategoryAssignments_Status",
+                table: "CategoryAssignments",
+                column: "Status");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CategoryAssignments_TeamId",
+                table: "CategoryAssignments",
+                column: "TeamId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CategoryAssignments_TeamLeaderId",
+                table: "CategoryAssignments",
+                column: "TeamLeaderId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Contracts_ContractNumber",
@@ -712,11 +1152,6 @@ namespace FurniFlowUz.Infrastructure.Migrations
                 name: "IX_Contracts_CustomerId",
                 table: "Contracts",
                 column: "CustomerId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Contracts_Deadline",
-                table: "Contracts",
-                column: "Deadline");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Contracts_PaymentStatus",
@@ -739,14 +1174,75 @@ namespace FurniFlowUz.Infrastructure.Migrations
                 column: "PhoneNumber");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Departments_Name",
+                table: "Departments",
+                column: "Name");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Details_FurnitureTypeId",
                 table: "Details",
                 column: "FurnitureTypeId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_DetailTasks_AssignedEmployeeId",
+                table: "DetailTasks",
+                column: "AssignedEmployeeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DetailTasks_CategoryAssignmentId",
+                table: "DetailTasks",
+                column: "CategoryAssignmentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DetailTasks_CategoryAssignmentId_Sequence",
+                table: "DetailTasks",
+                columns: new[] { "CategoryAssignmentId", "Sequence" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DetailTasks_DependsOnTaskId",
+                table: "DetailTasks",
+                column: "DependsOnTaskId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DetailTasks_DetailId",
+                table: "DetailTasks",
+                column: "DetailId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DetailTasks_Status",
+                table: "DetailTasks",
+                column: "Status");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Drawings_FurnitureTypeId",
                 table: "Drawings",
                 column: "FurnitureTypeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Employees_DepartmentId",
+                table: "Employees",
+                column: "DepartmentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Employees_IsActive",
+                table: "Employees",
+                column: "IsActive");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Employees_PositionId",
+                table: "Employees",
+                column: "PositionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Employees_UserId",
+                table: "Employees",
+                column: "UserId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FurnitureTypes_OrderCategoryId",
+                table: "FurnitureTypes",
+                column: "OrderCategoryId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_FurnitureTypes_OrderId",
@@ -761,10 +1257,45 @@ namespace FurniFlowUz.Infrastructure.Migrations
                 filter: "[TechnicalSpecificationId] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
+                name: "IX_FurnitureTypes_TemplateId",
+                table: "FurnitureTypes",
+                column: "TemplateId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FurnitureTypeTemplates_CategoryId",
+                table: "FurnitureTypeTemplates",
+                column: "CategoryId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_KPIs_Date",
                 table: "KPIs",
                 column: "Date",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MaterialAssignments_AssignedToEmployeeId",
+                table: "MaterialAssignments",
+                column: "AssignedToEmployeeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MaterialAssignments_AssignedToTeamId",
+                table: "MaterialAssignments",
+                column: "AssignedToTeamId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MaterialAssignments_MaterialRequestId",
+                table: "MaterialAssignments",
+                column: "MaterialRequestId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MaterialAssignments_ReceivedByUserId",
+                table: "MaterialAssignments",
+                column: "ReceivedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MaterialAssignments_WarehouseItemId",
+                table: "MaterialAssignments",
+                column: "WarehouseItemId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_MaterialRequests_ConfirmationStatus",
@@ -823,6 +1354,37 @@ namespace FurniFlowUz.Infrastructure.Migrations
                 columns: new[] { "UserId", "IsRead" });
 
             migrationBuilder.CreateIndex(
+                name: "IX_OrderCategories_CategoryId",
+                table: "OrderCategories",
+                column: "CategoryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OrderCategories_OrderId",
+                table: "OrderCategories",
+                column: "OrderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OrderCategories_OrderId_CategoryId",
+                table: "OrderCategories",
+                columns: new[] { "OrderId", "CategoryId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OrderImages_ImageType",
+                table: "OrderImages",
+                column: "ImageType");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OrderImages_OrderId",
+                table: "OrderImages",
+                column: "OrderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OrderImages_UploadedBy",
+                table: "OrderImages",
+                column: "UploadedBy");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Orders_AssignedConstructorId",
                 table: "Orders",
                 column: "AssignedConstructorId");
@@ -864,6 +1426,11 @@ namespace FurniFlowUz.Infrastructure.Migrations
                 column: "Status");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Positions_Name",
+                table: "Positions",
+                column: "Name");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ProductionStages_IsActive",
                 table: "ProductionStages",
                 column: "IsActive");
@@ -877,6 +1444,12 @@ namespace FurniFlowUz.Infrastructure.Migrations
                 name: "IX_ProductionStages_StageType",
                 table: "ProductionStages",
                 column: "StageType");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TaskPerformances_DetailTaskId",
+                table: "TaskPerformances",
+                column: "DetailTaskId",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_TeamMember_UserId",
@@ -1004,19 +1577,25 @@ namespace FurniFlowUz.Infrastructure.Migrations
                 name: "AuditLogs");
 
             migrationBuilder.DropTable(
-                name: "Details");
+                name: "Drawings");
 
             migrationBuilder.DropTable(
-                name: "Drawings");
+                name: "Employees");
 
             migrationBuilder.DropTable(
                 name: "KPIs");
 
             migrationBuilder.DropTable(
-                name: "MaterialRequests");
+                name: "MaterialAssignments");
 
             migrationBuilder.DropTable(
                 name: "Notifications");
+
+            migrationBuilder.DropTable(
+                name: "OrderImages");
+
+            migrationBuilder.DropTable(
+                name: "TaskPerformances");
 
             migrationBuilder.DropTable(
                 name: "TeamMember");
@@ -1028,31 +1607,55 @@ namespace FurniFlowUz.Infrastructure.Migrations
                 name: "WorkTasks");
 
             migrationBuilder.DropTable(
-                name: "WarehouseTransactions");
+                name: "Departments");
 
             migrationBuilder.DropTable(
-                name: "FurnitureTypes");
+                name: "Positions");
+
+            migrationBuilder.DropTable(
+                name: "MaterialRequests");
+
+            migrationBuilder.DropTable(
+                name: "DetailTasks");
 
             migrationBuilder.DropTable(
                 name: "ProductionStages");
 
             migrationBuilder.DropTable(
-                name: "Teams");
+                name: "WarehouseTransactions");
+
+            migrationBuilder.DropTable(
+                name: "CategoryAssignments");
+
+            migrationBuilder.DropTable(
+                name: "Details");
 
             migrationBuilder.DropTable(
                 name: "WarehouseItems");
 
             migrationBuilder.DropTable(
+                name: "Teams");
+
+            migrationBuilder.DropTable(
+                name: "FurnitureTypes");
+
+            migrationBuilder.DropTable(
+                name: "FurnitureTypeTemplates");
+
+            migrationBuilder.DropTable(
+                name: "OrderCategories");
+
+            migrationBuilder.DropTable(
                 name: "Orders");
+
+            migrationBuilder.DropTable(
+                name: "Categories");
 
             migrationBuilder.DropTable(
                 name: "Contracts");
 
             migrationBuilder.DropTable(
                 name: "Users");
-
-            migrationBuilder.DropTable(
-                name: "Categories");
 
             migrationBuilder.DropTable(
                 name: "Customers");

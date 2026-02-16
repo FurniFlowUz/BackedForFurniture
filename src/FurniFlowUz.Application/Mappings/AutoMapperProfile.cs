@@ -496,12 +496,15 @@ public class AutoMapperProfile : Profile
 
         // WorkTask to WorkTaskDto
         CreateMap<WorkTask, WorkTaskDto>()
-            .ForMember(dest => dest.OrderNumber, opt => opt.MapFrom(src => src.Order.OrderNumber))
+            .ForMember(dest => dest.OrderNumber, opt => opt.MapFrom(src => src.Order != null ? src.Order.OrderNumber : string.Empty))
             .ForMember(dest => dest.FurnitureTypeName, opt => opt.MapFrom(src => src.FurnitureType != null ? src.FurnitureType.Name : null))
             .ForMember(dest => dest.ProductionStage, opt => opt.MapFrom(src => src.ProductionStage))
             .ForMember(dest => dest.AssignedTeam, opt => opt.MapFrom(src => src.Team))
             .ForMember(dest => dest.AssignedWorker, opt => opt.MapFrom(src => src.AssignedWorker))
-            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
+            .ForMember(dest => dest.EstimatedHours, opt => opt.MapFrom(src => src.EstimatedHours ?? 0))
+            .ForMember(dest => dest.AcceptedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatedBy, opt => opt.Ignore());
 
         // CreateWorkTaskDto to WorkTask
         CreateMap<CreateWorkTaskDto, WorkTask>()
@@ -555,7 +558,9 @@ public class AutoMapperProfile : Profile
             .ForMember(dest => dest.AssignedWorker, opt => opt.Ignore());
 
         // ProductionStage to ProductionStageDto
-        CreateMap<ProductionStage, ProductionStageDto>();
+        CreateMap<ProductionStage, ProductionStageDto>()
+            .ForMember(dest => dest.DisplayOrder, opt => opt.MapFrom(src => src.SequenceOrder))
+            .ForMember(dest => dest.StageType, opt => opt.MapFrom(src => src.StageType.ToString()));
 
         CreateMap<ProductionStageDto, ProductionStage>()
             .ForMember(dest => dest.WorkTasks, opt => opt.Ignore())

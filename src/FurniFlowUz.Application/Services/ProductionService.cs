@@ -121,8 +121,8 @@ public class ProductionService : IProductionService
         // Send notification to team leader
         await _notificationService.CreateNotificationAsync(new CreateNotificationDto
         {
-            Title = "New Task Created",
-            Message = $"Task '{task.Title}' has been created for your team.",
+            Title = "Yangi Vazifa Yaratildi",
+            Message = $"'{task.Title}' vazifasi jamoangiz uchun yaratildi.",
             Type = NotificationType.TaskAssigned.ToString(),
             UserId = team.TeamLeaderId
         }, cancellationToken);
@@ -206,8 +206,8 @@ public class ProductionService : IProductionService
         // Send notification to worker
         await _notificationService.CreateNotificationAsync(new CreateNotificationDto
         {
-            Title = "Task Assigned",
-            Message = $"Task '{task.Title}' has been assigned to you.",
+            Title = "Vazifa Tayinlandi",
+            Message = $"'{task.Title}' vazifasi sizga tayinlandi.",
             Type = NotificationType.TaskAssigned.ToString(),
             UserId = request.WorkerId
         }, cancellationToken);
@@ -242,11 +242,11 @@ public class ProductionService : IProductionService
 
         // Send notification to team leader
         var team = await _unitOfWork.Teams.GetByIdAsync(task.TeamId, cancellationToken);
-        var message = $"Task '{task.Title}' has been accepted by the worker.";
+        var message = $"'{task.Title}' vazifasi ishchi tomonidan qabul qilindi.";
 
         await _notificationService.CreateNotificationAsync(new CreateNotificationDto
         {
-            Title = "Task Status Updated",
+            Title = "Vazifa Holati Yangilandi",
             Message = message,
             Type = nameof(NotificationType.TaskCompleted),
             UserId = team.TeamLeaderId
@@ -261,9 +261,9 @@ public class ProductionService : IProductionService
             throw new NotFoundException(nameof(WorkTask), taskId);
         }
 
-        if (task.Status != Domain.Enums.TaskStatus.Accepted)
+        if (task.Status != Domain.Enums.TaskStatus.Accepted && task.Status != Domain.Enums.TaskStatus.InProgress)
         {
-            throw new BusinessException($"Task must be in 'Accepted' status to complete. Current status: {task.Status}");
+            throw new BusinessException($"Task must be in 'Accepted' or 'InProgress' status to complete. Current status: {task.Status}");
         }
 
         // Complete task
@@ -284,8 +284,8 @@ public class ProductionService : IProductionService
         var team = await _unitOfWork.Teams.GetByIdAsync(task.TeamId, cancellationToken);
         await _notificationService.CreateNotificationAsync(new CreateNotificationDto
         {
-            Title = "Task Completed",
-            Message = $"Task '{task.Title}' has been completed.",
+            Title = "Vazifa Yakunlandi",
+            Message = $"'{task.Title}' vazifasi yakunlandi.",
             Type = nameof(NotificationType.TaskCompleted),
             UserId = team.TeamLeaderId
         }, cancellationToken);
@@ -296,8 +296,8 @@ public class ProductionService : IProductionService
         {
             await _notificationService.CreateNotificationAsync(new CreateNotificationDto
             {
-                Title = "Task Completed",
-                Message = $"Task '{task.Title}' for order {order.OrderNumber} has been completed.",
+                Title = "Vazifa Yakunlandi",
+                Message = $"'{task.Title}' vazifasi {order.OrderNumber} buyurtma uchun yakunlandi.",
                 Type = nameof(NotificationType.TaskCompleted),
                 UserId = order.AssignedProductionManagerId.Value
             }, cancellationToken);
@@ -363,6 +363,147 @@ public class ProductionService : IProductionService
         }
 
         return true;
+    }
+
+    public async Task<IEnumerable<ProductionStageDto>> GetAllStagesAsync(CancellationToken cancellationToken = default)
+    {
+        var stages = await _unitOfWork.ProductionStages.GetAllAsync(cancellationToken);
+        var activeStages = stages.Where(s => s.IsActive).OrderBy(s => s.SequenceOrder);
+        return _mapper.Map<IEnumerable<ProductionStageDto>>(activeStages);
+    }
+
+    public async Task<IEnumerable<WorkTaskDto>> GetTasksByAssignmentAsync(int assignmentId, CancellationToken cancellationToken = default)
+    {
+        var assignment = await _unitOfWork.CategoryAssignments.GetByIdAsync(assignmentId, cancellationToken);
+        if (assignment == null)
+        {
+            throw new NotFoundException(nameof(CategoryAssignment), assignmentId);
+        }
+
+        // Get all tasks for this order with includes
+        var tasks = await _unitOfWork.WorkTasks.GetPagedAsync(
+            pageNumber: 1,
+            pageSize: 1000,
+            filter: t => t.OrderId == assignment.OrderId,
+            orderBy: q => q.OrderBy(t => t.SequenceOrder),
+            includeProperties: "Order,ProductionStage,Team,AssignedWorker,FurnitureType",
+            cancellationToken: cancellationToken);
+
+        return _mapper.Map<IEnumerable<WorkTaskDto>>(tasks);
+    }
+
+    public async Task<IEnumerable<WorkTaskDto>> GetTasksByOrderAsync(int orderId, CancellationToken cancellationToken = default)
+    {
+        var order = await _unitOfWork.Orders.GetByIdAsync(orderId, cancellationToken);
+        if (order == null)
+        {
+            throw new NotFoundException(nameof(Order), orderId);
+        }
+
+        // Get all tasks for this order with includes
+        var tasks = await _unitOfWork.WorkTasks.GetPagedAsync(
+            pageNumber: 1,
+            pageSize: 1000,
+            filter: t => t.OrderId == orderId,
+            orderBy: q => q.OrderBy(t => t.SequenceOrder),
+            includeProperties: "Order,ProductionStage,Team,AssignedWorker,FurnitureType",
+            cancellationToken: cancellationToken);
+
+        return _mapper.Map<IEnumerable<WorkTaskDto>>(tasks);
+    }
+
+    public async Task StartTaskAsync(int taskId, CancellationToken cancellationToken = default)
+    {
+        var task = await _unitOfWork.WorkTasks.GetByIdAsync(taskId, cancellationToken);
+        if (task == null)
+        {
+            throw new NotFoundException(nameof(WorkTask), taskId);
+        }
+
+        if (task.Status != Domain.Enums.TaskStatus.Pending && task.Status != Domain.Enums.TaskStatus.Accepted)
+        {
+            throw new BusinessException($"Task must be in 'Pending' or 'Accepted' status to start. Current status: {task.Status}");
+        }
+
+        task.Status = Domain.Enums.TaskStatus.InProgress;
+        task.StartedAt = DateTime.UtcNow;
+        task.UpdatedAt = DateTime.UtcNow;
+
+        _unitOfWork.WorkTasks.Update(task);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Send notification
+        var team = await _unitOfWork.Teams.GetByIdAsync(task.TeamId, cancellationToken);
+        await _notificationService.CreateNotificationAsync(new CreateNotificationDto
+        {
+            Title = "Vazifa Boshlandi",
+            Message = $"'{task.Title}' vazifasi boshlandi.",
+            Type = nameof(NotificationType.TaskAssigned),
+            UserId = team.TeamLeaderId
+        }, cancellationToken);
+    }
+
+    public async Task CreateTasksForAssignmentAsync(int assignmentId, int orderId, int teamId, CancellationToken cancellationToken = default)
+    {
+        var assignment = await _unitOfWork.CategoryAssignments.GetByIdAsync(assignmentId, cancellationToken);
+        if (assignment == null)
+        {
+            throw new NotFoundException(nameof(CategoryAssignment), assignmentId);
+        }
+
+        var order = await _unitOfWork.Orders.GetByIdAsync(orderId, cancellationToken);
+        if (order == null)
+        {
+            throw new NotFoundException(nameof(Order), orderId);
+        }
+
+        var team = await _unitOfWork.Teams.GetByIdAsync(teamId, cancellationToken);
+        if (team == null)
+        {
+            throw new NotFoundException(nameof(Team), teamId);
+        }
+
+        // Get all production stages
+        var stages = await _unitOfWork.ProductionStages.GetAllAsync(cancellationToken);
+        var activeStages = stages.Where(s => s.IsActive).OrderBy(s => s.SequenceOrder).ToList();
+
+        // Check if tasks already exist for this order
+        var existingTasks = await _unitOfWork.WorkTasks.FindAsync(t => t.OrderId == orderId, cancellationToken);
+        if (existingTasks.Any())
+        {
+            // Tasks already created for this order
+            return;
+        }
+
+        // Create a task for each stage
+        foreach (var stage in activeStages)
+        {
+            var newTask = new WorkTask
+            {
+                Title = stage.Name,
+                Description = stage.Description,
+                OrderId = orderId,
+                ProductionStageId = stage.Id,
+                TeamId = teamId,
+                SequenceOrder = stage.SequenceOrder,
+                Status = Domain.Enums.TaskStatus.Pending,
+                EstimatedHours = stage.EstimatedDurationHours,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _unitOfWork.WorkTasks.AddAsync(newTask, cancellationToken);
+        }
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Send notification to team leader
+        await _notificationService.CreateNotificationAsync(new CreateNotificationDto
+        {
+            Title = "Yangi Vazifalar Yaratildi",
+            Message = $"{order.OrderNumber} buyurtmasi uchun {activeStages.Count} ta vazifa yaratildi.",
+            Type = NotificationType.TaskAssigned.ToString(),
+            UserId = team.TeamLeaderId
+        }, cancellationToken);
     }
 
     #region Private Helper Methods

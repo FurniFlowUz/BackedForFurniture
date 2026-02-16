@@ -26,6 +26,21 @@ public class ProductionStageDto
     public int DisplayOrder { get; set; }
 
     /// <summary>
+    /// Sequence order in production pipeline
+    /// </summary>
+    public int SequenceOrder { get; set; }
+
+    /// <summary>
+    /// Stage type (Sawing, Routing, EdgeBanding, Sanding, Assembly, Finishing, Painting, QualityControl)
+    /// </summary>
+    public string StageType { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Estimated duration in hours
+    /// </summary>
+    public decimal? EstimatedDurationHours { get; set; }
+
+    /// <summary>
     /// Indicates if the stage is active
     /// </summary>
     public bool IsActive { get; set; }

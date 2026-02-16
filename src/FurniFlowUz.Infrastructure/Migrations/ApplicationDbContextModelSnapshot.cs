@@ -495,7 +495,7 @@ namespace FurniFlowUz.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AssignedEmployeeId")
+                    b.Property<int?>("AssignedEmployeeId")
                         .HasColumnType("int");
 
                     b.Property<int>("CategoryAssignmentId")
@@ -519,7 +519,7 @@ namespace FurniFlowUz.Infrastructure.Migrations
                     b.Property<int?>("DependsOnTaskId")
                         .HasColumnType("int");
 
-                    b.Property<int>("DetailId")
+                    b.Property<int?>("DetailId")
                         .HasColumnType("int");
 
                     b.Property<TimeSpan?>("EstimatedDuration")
@@ -1424,6 +1424,176 @@ namespace FurniFlowUz.Infrastructure.Migrations
                     b.HasIndex("StageType");
 
                     b.ToTable("ProductionStages");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "O'lchov va kesish ishlari",
+                            EstimatedDurationHours = 2m,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Razmer",
+                            SequenceOrder = 1,
+                            StageType = 0
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Arra bilan kesish",
+                            EstimatedDurationHours = 3m,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Arra",
+                            SequenceOrder = 2,
+                            StageType = 0
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Shipon bilan ishlash",
+                            EstimatedDurationHours = 2m,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Shipon",
+                            SequenceOrder = 3,
+                            StageType = 1
+                        },
+                        new
+                        {
+                            Id = 4,
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Pres ishlari",
+                            EstimatedDurationHours = 2m,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Pres",
+                            SequenceOrder = 4,
+                            StageType = 1
+                        },
+                        new
+                        {
+                            Id = 5,
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Rover stanogida ishlash",
+                            EstimatedDurationHours = 3m,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Rover",
+                            SequenceOrder = 5,
+                            StageType = 1
+                        },
+                        new
+                        {
+                            Id = 6,
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Qirralarni yopish",
+                            EstimatedDurationHours = 2m,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Kromka",
+                            SequenceOrder = 6,
+                            StageType = 2
+                        },
+                        new
+                        {
+                            Id = 7,
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Silliqlash ishlari",
+                            EstimatedDurationHours = 3m,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Shkurka",
+                            SequenceOrder = 7,
+                            StageType = 3
+                        },
+                        new
+                        {
+                            Id = 8,
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Pardozlash tayyorlash",
+                            EstimatedDurationHours = 2m,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Pardozchi",
+                            SequenceOrder = 8,
+                            StageType = 5
+                        },
+                        new
+                        {
+                            Id = 9,
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Grunt qoplash",
+                            EstimatedDurationHours = 2m,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Grunt",
+                            SequenceOrder = 9,
+                            StageType = 5
+                        },
+                        new
+                        {
+                            Id = 10,
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Grunt silliqlash",
+                            EstimatedDurationHours = 2m,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Grunt shkurka",
+                            SequenceOrder = 10,
+                            StageType = 5
+                        },
+                        new
+                        {
+                            Id = 11,
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Bo'yash",
+                            EstimatedDurationHours = 3m,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Kraska",
+                            SequenceOrder = 11,
+                            StageType = 6
+                        },
+                        new
+                        {
+                            Id = 12,
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Quritish",
+                            EstimatedDurationHours = 4m,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Qurutish",
+                            SequenceOrder = 12,
+                            StageType = 6
+                        },
+                        new
+                        {
+                            Id = 13,
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Sifat nazorati",
+                            EstimatedDurationHours = 1m,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "OTK",
+                            SequenceOrder = 13,
+                            StageType = 7
+                        },
+                        new
+                        {
+                            Id = 14,
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Qadoqlash ishlari",
+                            EstimatedDurationHours = 2m,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Qadoqlash",
+                            SequenceOrder = 14,
+                            StageType = 4
+                        });
                 });
 
             modelBuilder.Entity("FurniFlowUz.Domain.Entities.TaskPerformance", b =>
@@ -1996,8 +2166,7 @@ namespace FurniFlowUz.Infrastructure.Migrations
                     b.HasOne("FurniFlowUz.Domain.Entities.User", "AssignedEmployee")
                         .WithMany()
                         .HasForeignKey("AssignedEmployeeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("FurniFlowUz.Domain.Entities.CategoryAssignment", "CategoryAssignment")
                         .WithMany("DetailTasks")
@@ -2013,8 +2182,7 @@ namespace FurniFlowUz.Infrastructure.Migrations
                     b.HasOne("FurniFlowUz.Domain.Entities.Detail", "Detail")
                         .WithMany()
                         .HasForeignKey("DetailId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("AssignedEmployee");
 

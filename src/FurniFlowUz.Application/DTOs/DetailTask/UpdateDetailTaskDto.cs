@@ -15,6 +15,11 @@ public class UpdateDetailTaskDto
     public DetailTaskStatus Status { get; set; }
 
     /// <summary>
+    /// Employee ID to assign the task to (optional)
+    /// </summary>
+    public int? AssignedEmployeeId { get; set; }
+
+    /// <summary>
     /// Optional notes for the update
     /// </summary>
     [MaxLength(500, ErrorMessage = "Notes cannot exceed 500 characters")]

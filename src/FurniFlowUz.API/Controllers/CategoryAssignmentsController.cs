@@ -144,7 +144,7 @@ public class CategoryAssignmentsController : ControllerBase
     /// Marks assignment as started
     /// </summary>
     [HttpPut("{id}/start")]
-    [Authorize(Roles = "TeamLeader,Director")]
+    [Authorize(Roles = "ProductionManager,TeamLeader,Director")]
     public async Task<ActionResult<ApiResponse<CategoryAssignmentDto>>> StartAssignment(
         [FromRoute] int id,
         CancellationToken cancellationToken)
@@ -158,7 +158,7 @@ public class CategoryAssignmentsController : ControllerBase
     /// Marks assignment as completed
     /// </summary>
     [HttpPut("{id}/complete")]
-    [Authorize(Roles = "TeamLeader,Director")]
+    [Authorize(Roles = "ProductionManager,TeamLeader,Director")]
     public async Task<ActionResult<ApiResponse<CategoryAssignmentDto>>> CompleteAssignment(
         [FromRoute] int id,
         CancellationToken cancellationToken)

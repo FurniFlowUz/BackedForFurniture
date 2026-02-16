@@ -122,7 +122,7 @@ public class CategoryAssignmentService : ICategoryAssignmentService
         var assignments = await _unitOfWork.CategoryAssignments.GetPagedAsync(
             pageNumber: 1,
             pageSize: 10000,
-            includeProperties: "Order,Order.Customer,FurnitureType,FurnitureType.OrderCategory,FurnitureType.OrderCategory.Category,TeamLeader,Team,DetailTasks",
+            includeProperties: "Order,Order.Customer,FurnitureType,FurnitureType.OrderCategory,FurnitureType.OrderCategory.Category,TeamLeader,Team,FurnitureType.Details,DetailTasks",
             cancellationToken: cancellationToken);
 
         // Get all FurnitureType IDs to fetch Details separately
@@ -575,12 +575,12 @@ public class CategoryAssignmentService : ICategoryAssignmentService
         }
         else
         {
-            // Fallback: Find FurnitureTypes directly by OrderId that match category name
+            // Fallback 1: Find FurnitureTypes directly by OrderId that match category name via OrderCategory
             var allFurnitureTypes = await _unitOfWork.FurnitureTypes.GetPagedAsync(
                 pageNumber: 1,
                 pageSize: 10000,
                 filter: ft => ft.OrderId == request.OrderId,
-                includeProperties: "OrderCategory,OrderCategory.Category",
+                includeProperties: "OrderCategory,OrderCategory.Category,Details,TechnicalSpecification",
                 cancellationToken: cancellationToken);
 
             furnitureTypesToAssign = allFurnitureTypes
@@ -588,6 +588,16 @@ public class CategoryAssignmentService : ICategoryAssignmentService
                              ft.OrderCategory.Category != null &&
                              ft.OrderCategory.Category.Name.ToLower() == request.CategoryName.ToLower())
                 .ToList();
+
+            // Fallback 2: If still no match, try matching by FurnitureType.Name == CategoryName
+            if (!furnitureTypesToAssign.Any())
+            {
+                furnitureTypesToAssign = allFurnitureTypes
+                    .Where(ft => ft.Name.ToLower() == request.CategoryName.ToLower() ||
+                                 ft.Name.ToLower().Contains(request.CategoryName.ToLower()) ||
+                                 request.CategoryName.ToLower().Contains(ft.Name.ToLower()))
+                    .ToList();
+            }
         }
 
         // If still no furniture types found, create a placeholder one

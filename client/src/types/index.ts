@@ -296,6 +296,123 @@ export interface DashboardStats {
   completedTasks: number;
 }
 
+// Director Dashboard
+export interface DirectorDashboardDto {
+  totalOrders: number;
+  ordersInProgress: number;
+  delayedOrders: number;
+  completedOrders: number;
+  totalRevenue: number;
+  dailyRevenue: number;
+  monthlyRevenue: number;
+  activeWorkers: number;
+  warehouseAlerts: WarehouseAlertDto[];
+  recentOrders: OrderSummaryDto[];
+  alerts: string[];
+  delayedTasks: DelayedTaskDto[];
+}
+
+export interface ContractStatsDto {
+  activeContracts: number;
+  pendingOrders: number;
+  completedOrders: number;
+  totalRevenue: number;
+  revenueChangePercentage: number;
+  activeContractsChangePercentage: number;
+  pendingOrdersChangePercentage: number;
+}
+
+export interface OrderStatsDto {
+  totalOrders: number;
+  created: number;
+  inProgress: number;
+  completed: number;
+}
+
+export interface WarehouseAlertDto {
+  itemId: number;
+  warehouseItemId: number;
+  itemName: string;
+  sku: string;
+  currentStock: number;
+  minimumStock: number;
+  shortage: number;
+  unit: string;
+  severity: string;
+  alertMessage: string;
+  stockPercentage: number;
+}
+
+export interface OrderSummaryDto {
+  id: number;
+  orderNumber: string;
+  customerName: string;
+  categoryName: string;
+  furnitureTypesCount: number;
+  expectedDeliveryDate: string;
+  status: string;
+  assignedConstructorName?: string;
+  assignedProductionManagerName?: string;
+  createdAt: string;
+}
+
+export interface DelayedTaskDto {
+  taskId?: number;
+  taskTitle: string;
+  orderNumber: string;
+  teamName?: string;
+  assignedWorkerName?: string;
+  expectedCompletionDate: string;
+  daysDelayed: number;
+  status: string;
+}
+
+// Recent Activity
+export interface RecentActivityDto {
+  id: number;
+  type: string;
+  title: string;
+  description: string;
+  relatedEntityType?: string;
+  relatedEntityId?: number;
+  createdAt: string;
+  performedBy?: string;
+  statusIndicator?: string;
+}
+
+// Pending Items
+export type PendingItemPriority = 'Low' | 'Medium' | 'High' | 'Urgent';
+
+export interface PendingItemDto {
+  id: number;
+  type: string;
+  title: string;
+  description?: string;
+  priority: PendingItemPriority;
+  relatedEntityType?: string;
+  relatedEntityId?: number;
+  dueDate?: string;
+  createdAt: string;
+  customerName?: string;
+  amount?: number;
+}
+
+// Employee
+export interface EmployeeDto {
+  id: number;
+  userId: number;
+  fullName: string;
+  phone: string;
+  positionId?: number;
+  positionName?: string;
+  departmentId?: number;
+  departmentName?: string;
+  isActive: boolean;
+  activeTasks: number;
+  completedTasks: number;
+  onTimePercent: number;
+}
+
 // API Response types
 export interface ApiResponse<T> {
   data: T;

@@ -10,12 +10,11 @@ public class CompleteTaskDtoValidator : AbstractValidator<CompleteTaskDto>
 {
     public CompleteTaskDtoValidator()
     {
-        RuleFor(x => x.TaskId)
-            .NotEmpty().WithMessage("Task ID is required.");
-
+        // ActualHours is optional, but if provided must be valid
         RuleFor(x => x.ActualHours)
-            .GreaterThan(0).WithMessage("Actual hours must be greater than 0.")
-            .LessThanOrEqualTo(10000).WithMessage("Actual hours is too large.");
+            .GreaterThanOrEqualTo(0).WithMessage("Actual hours must be 0 or greater.")
+            .LessThanOrEqualTo(10000).WithMessage("Actual hours is too large.")
+            .When(x => x.ActualHours.HasValue);
 
         RuleFor(x => x.Notes)
             .MaximumLength(2000).WithMessage("Notes cannot exceed 2000 characters.")

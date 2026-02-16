@@ -271,8 +271,8 @@ public class OrderService : IOrderService
         // Send notification to Director
         await _notificationService.CreateNotificationAsync(new CreateNotificationDto
         {
-            Title = "New Order Created",
-            Message = $"Order {orderNumber} has been created for customer {customer?.FullName ?? "Unknown"}.",
+            Title = "Yangi Buyurtma Yaratildi",
+            Message = $"{orderNumber} raqamli buyurtma {customer?.FullName ?? "Noma'lum"} mijoz uchun yaratildi.",
             Type = nameof(NotificationType.OrderStatusChanged),
             Role = UserRole.Director.ToString()
         }, cancellationToken);
@@ -400,8 +400,8 @@ public async Task AssignConstructorAsync(
             new CreateNotificationDto
             {
                 UserId = constructor.UserId,
-                Title = "New Order Assigned",
-                Message = $"Order #{order.OrderNumber} has been assigned to you",
+                Title = "Yangi Buyurtma Tayinlandi",
+                Message = $"{order.OrderNumber} raqamli buyurtma sizga tayinlandi",
                 Type = NotificationType.OrderAssigned.ToString()
             },
 
@@ -460,8 +460,8 @@ public async Task AssignConstructorAsync(
         // Send notification to production manager (using User.Id)
         await _notificationService.CreateNotificationAsync(new CreateNotificationDto
         {
-            Title = "Order Assigned",
-            Message = $"Order {order.OrderNumber} has been assigned to you for production management.",
+            Title = "Buyurtma Tayinlandi",
+            Message = $"{order.OrderNumber} raqamli buyurtma sizga ishlab chiqarish boshqaruvi uchun tayinlandi.",
             Type = nameof(NotificationType.TaskAssigned),
             UserId = employee.UserId  // ⚠️ Use User.Id for notifications
         }, cancellationToken);
@@ -494,16 +494,16 @@ public async Task AssignConstructorAsync(
         {
             string message = status switch
             {
-                OrderStatus.SpecificationsReady => $"Order {order.OrderNumber} specifications are ready for production.",
-                OrderStatus.InProduction => $"Order {order.OrderNumber} is now in production.",
-                OrderStatus.Completed => $"Order {order.OrderNumber} has been completed.",
-                OrderStatus.Cancelled => $"Order {order.OrderNumber} has been cancelled.",
-                _ => $"Order {order.OrderNumber} status changed to {status}."
+                OrderStatus.SpecificationsReady => $"{order.OrderNumber} buyurtma spetsifikatsiyalari ishlab chiqarishga tayyor.",
+                OrderStatus.InProduction => $"{order.OrderNumber} buyurtma ishlab chiqarishda.",
+                OrderStatus.Completed => $"{order.OrderNumber} buyurtma yakunlandi.",
+                OrderStatus.Cancelled => $"{order.OrderNumber} buyurtma bekor qilindi.",
+                _ => $"{order.OrderNumber} buyurtma holati {status} ga o'zgartirildi."
             };
 
             await _notificationService.CreateNotificationAsync(new CreateNotificationDto
             {
-                Title = "Order Status Updated",
+                Title = "Buyurtma Holati Yangilandi",
                 Message = message,
                 Type = nameof(NotificationType.OrderStatusChanged),
                 Role = UserRole.Director.ToString()

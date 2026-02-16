@@ -282,8 +282,8 @@ public class ContractService : IContractService
         // Send notification to Director and Salesperson
         await _notificationService.CreateNotificationAsync(new DTOs.Notification.CreateNotificationDto
         {
-            Title = "New Contract Created",
-            Message = $"Contract {contractNumber} has been created for customer {customer.FullName}.",
+            Title = "Yangi Shartnoma Yaratildi",
+            Message = $"{contractNumber} raqamli shartnoma {customer.FullName} mijoz uchun yaratildi.",
             Type = NotificationType.OrderStatusChanged.ToString(),
             Role = UserRole.Director.ToString()
         }, cancellationToken);

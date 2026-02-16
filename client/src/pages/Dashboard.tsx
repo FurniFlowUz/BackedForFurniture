@@ -1,82 +1,216 @@
 import { useAuth } from '@/contexts/AuthContext';
+import { useQuery } from '@tanstack/react-query';
+import { dashboardService } from '@/services/dashboardService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import {
   FileText,
   ShoppingCart,
-  ClipboardList,
-  Package,
+  Users,
   TrendingUp,
-  DollarSign,
-  CheckCircle,
-  Clock,
+  ChevronRight,
+  ShoppingBag,
+  CheckSquare,
+  Package,
 } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import { clsx } from 'clsx';
+import { PendingItemPriority } from '@/types';
+
+// Activity type to icon mapping
+const getActivityIcon = (type: string) => {
+  switch (type) {
+    case 'OrderCreated':
+    case 'OrderUpdated':
+    case 'order':
+      return ShoppingBag;
+    case 'ContractCreated':
+    case 'ContractUpdated':
+    case 'contract':
+      return FileText;
+    case 'TaskAssigned':
+    case 'TaskCompleted':
+    case 'task':
+      return CheckSquare;
+    case 'MaterialApproved':
+    case 'MaterialRequest':
+    case 'material':
+      return Package;
+    default:
+      return FileText;
+  }
+};
+
+// Priority to color mapping
+const getPriorityColor = (priority: PendingItemPriority | string): string => {
+  switch (priority) {
+    case 'Urgent':
+    case 'high':
+      return 'bg-red-500';
+    case 'High':
+    case 'medium':
+      return 'bg-orange-500';
+    case 'Medium':
+      return 'bg-yellow-500';
+    case 'Low':
+    case 'low':
+      return 'bg-blue-400';
+    default:
+      return 'bg-gray-400';
+  }
+};
+
+// Format due date
+const formatDueDate = (dueDate?: string): string => {
+  if (!dueDate) return '';
+  const date = new Date(dueDate);
+  const now = new Date();
+  const diffDays = Math.ceil((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) return 'Today';
+  if (diffDays === 1) return 'Tomorrow';
+  if (diffDays > 1 && diffDays <= 7) return 'This week';
+  return date.toLocaleDateString();
+};
+
+// Format currency
+const formatCurrency = (amount: number): string => {
+  if (amount >= 1000000) {
+    return `$${(amount / 1000000).toFixed(1)}M`;
+  }
+  if (amount >= 1000) {
+    return `$${(amount / 1000).toFixed(0)}K`;
+  }
+  return `$${amount}`;
+};
+
+// Mock data - rasmdagi dizayn uchun
+const mockActivities = [
+  { id: 1, type: 'order', title: 'Order #ORD-2024-015 created', createdAt: new Date(Date.now() - 5 * 60 * 1000).toISOString() },
+  { id: 2, type: 'task', title: 'Dimensions updated for Category A', createdAt: new Date(Date.now() - 60 * 60 * 1000).toISOString() },
+  { id: 3, type: 'task', title: 'Task assigned to John Doe', createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() },
+  { id: 4, type: 'material', title: 'Material request approved', createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString() },
+];
+
+const mockPendingItems = [
+  { id: 1, title: 'Review order dimensions', priority: 'Urgent' as PendingItemPriority, dueDate: new Date().toISOString() },
+  { id: 2, title: 'Approve material request', priority: 'High' as PendingItemPriority, dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() },
+  { id: 3, title: 'Assign tasks to team', priority: 'Medium' as PendingItemPriority, dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString() },
+  { id: 4, title: 'Update inventory count', priority: 'Low' as PendingItemPriority, dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString() },
+];
 
 export function Dashboard() {
   const { user } = useAuth();
 
+  // Fetch dashboard data
+  const { data: dashboardData, isLoading } = useQuery({
+    queryKey: ['dashboard-data'],
+    queryFn: () => dashboardService.getDashboardData(),
+    refetchInterval: 60000,
+    retry: 1,
+  });
+
+  // API yoki mock data
+  const totalContracts = dashboardData?.contractStats?.activeContracts || 156;
+  const activeOrders = dashboardData?.orderStats?.inProgress || 34;
+  const employeesCount = dashboardData?.employeesCount || 87;
+  const monthlyRevenue = dashboardData?.contractStats?.totalRevenue || 1200000;
+  const contractsChange = dashboardData?.contractStats?.activeContractsChangePercentage ?? 12;
+  const revenueChange = dashboardData?.contractStats?.revenueChangePercentage ?? 8;
+
+  const activities = dashboardData?.activities?.length ? dashboardData.activities : mockActivities;
+  const pendingItems = dashboardData?.pendingItems?.length ? dashboardData.pendingItems : mockPendingItems;
+
   const stats = [
     {
       title: 'Total Contracts',
-      value: '24',
+      value: totalContracts,
       icon: FileText,
-      color: 'bg-blue-500',
-      change: '+12%',
+      bgColor: 'bg-amber-50',
+      iconColor: 'text-amber-600',
+      change: contractsChange,
+      changeText: 'this month',
     },
     {
       title: 'Active Orders',
-      value: '18',
+      value: activeOrders,
       icon: ShoppingCart,
-      color: 'bg-green-500',
-      change: '+8%',
+      bgColor: 'bg-emerald-50',
+      iconColor: 'text-emerald-600',
     },
     {
-      title: 'Pending Tasks',
-      value: '32',
-      icon: Clock,
-      color: 'bg-yellow-500',
-      change: '-5%',
+      title: 'Employees',
+      value: employeesCount,
+      icon: Users,
+      bgColor: 'bg-sky-50',
+      iconColor: 'text-sky-600',
     },
     {
-      title: 'Completed Tasks',
-      value: '156',
-      icon: CheckCircle,
-      color: 'bg-purple-500',
-      change: '+23%',
+      title: 'Monthly Revenue',
+      value: formatCurrency(monthlyRevenue),
+      icon: TrendingUp,
+      bgColor: 'bg-emerald-50',
+      iconColor: 'text-emerald-600',
+      change: revenueChange,
+      isPercentage: true,
     },
   ];
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <div className="h-8 bg-gray-200 rounded w-64 animate-pulse"></div>
+          <div className="h-4 bg-gray-200 rounded w-40 mt-2 animate-pulse"></div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="bg-white rounded-lg shadow-md p-6 animate-pulse">
+              <div className="h-4 bg-gray-200 rounded w-24 mb-4"></div>
+              <div className="h-8 bg-gray-200 rounded w-16 mb-2"></div>
+              <div className="h-3 bg-gray-200 rounded w-20"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">
-          Welcome back, {user?.fullName}!
+        <h1 className="text-2xl font-bold text-gray-900">
+          Welcome back, {user?.fullName?.split(' ')[0] || 'Admin'}!
         </h1>
-        <p className="mt-2 text-gray-600">
-          Here's what's happening in your furniture manufacturing workflow
-        </p>
+        <p className="text-sm text-gray-500 mt-1">Direktor Dashboard</p>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat) => {
+        {stats.map((stat, index) => {
           const Icon = stat.icon;
           return (
-            <Card key={stat.title}>
+            <Card key={index} className="hover:shadow-lg transition-shadow cursor-pointer">
               <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-2">{stat.value}</p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      <span className={stat.change.startsWith('+') ? 'text-green-600' : 'text-red-600'}>
-                        {stat.change}
-                      </span>{' '}
-                      from last month
+                <div className="flex items-start justify-between">
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-gray-500">{stat.title}</p>
+                    <p className="text-3xl font-bold text-gray-900">
+                      {typeof stat.value === 'number' ? stat.value.toLocaleString() : stat.value}
                     </p>
+                    {stat.change !== undefined && (
+                      <p className="text-sm">
+                        <span className={stat.change >= 0 ? 'text-emerald-600' : 'text-red-600'}>
+                          {stat.change >= 0 ? '+' : ''}{stat.isPercentage ? `${stat.change}%` : stat.change}
+                        </span>
+                        {stat.changeText && (
+                          <span className="text-gray-500 ml-1">{stat.changeText}</span>
+                        )}
+                      </p>
+                    )}
                   </div>
-                  <div className={`${stat.color} p-3 rounded-lg`}>
-                    <Icon className="h-6 w-6 text-white" />
+                  <div className={clsx('p-3 rounded-xl', stat.bgColor)}>
+                    <Icon className={clsx('h-6 w-6', stat.iconColor)} />
                   </div>
                 </div>
               </CardContent>
@@ -85,44 +219,69 @@ export function Dashboard() {
         })}
       </div>
 
-      {/* Recent Activity */}
+      {/* Recent Activity & Pending Items */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Recent Activity */}
         <Card>
-          <CardHeader>
-            <CardTitle>Recent Contracts</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <div>
+              <CardTitle className="text-lg font-semibold">Recent Activity</CardTitle>
+              <p className="text-sm text-gray-500 mt-1">Your latest actions and updates</p>
+            </div>
+            <button className="flex items-center text-sm text-blue-600 hover:text-blue-700 font-medium">
+              See more
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </button>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-center justify-between py-3 border-b last:border-0">
-                  <div>
-                    <p className="font-medium text-gray-900">Contract #CTR-2025-00{i}</p>
-                    <p className="text-sm text-gray-500">Client Name - 2025-01-{15 + i}</p>
+          <CardContent className="pt-4">
+            <div className="space-y-1">
+              {activities.map((activity) => {
+                const Icon = getActivityIcon(activity.type);
+                return (
+                  <div
+                    key={activity.id}
+                    className="flex items-center justify-between py-3 hover:bg-gray-50 rounded-lg px-2 -mx-2 transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-gray-100 rounded-lg">
+                        <Icon className="h-4 w-4 text-gray-600" />
+                      </div>
+                      <span className="text-sm text-gray-900">{activity.title}</span>
+                    </div>
+                    <span className="text-xs text-gray-500">
+                      {formatDistanceToNow(new Date(activity.createdAt), { addSuffix: true })}
+                    </span>
                   </div>
-                  <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                    Active
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </CardContent>
         </Card>
 
+        {/* Pending Items */}
         <Card>
-          <CardHeader>
-            <CardTitle>Recent Orders</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <div>
+              <CardTitle className="text-lg font-semibold">Pending Items</CardTitle>
+              <p className="text-sm text-gray-500 mt-1">Items requiring your attention</p>
+            </div>
+            <button className="flex items-center text-sm text-blue-600 hover:text-blue-700 font-medium">
+              See more
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </button>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-center justify-between py-3 border-b last:border-0">
-                  <div>
-                    <p className="font-medium text-gray-900">Order #ORD-2025-00{i}</p>
-                    <p className="text-sm text-gray-500">Kitchen Cabinet - Qty: {i * 2}</p>
+          <CardContent className="pt-4">
+            <div className="space-y-1">
+              {pendingItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between py-3 hover:bg-gray-50 rounded-lg px-2 -mx-2 transition-colors cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={clsx('w-2.5 h-2.5 rounded-full', getPriorityColor(item.priority))} />
+                    <span className="text-sm text-gray-900">{item.title}</span>
                   </div>
-                  <span className="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                    In Production
-                  </span>
+                  <span className="text-xs text-gray-500">{formatDueDate(item.dueDate)}</span>
                 </div>
               ))}
             </div>
@@ -140,18 +299,20 @@ export function Dashboard() {
             <div className="grid grid-cols-3 gap-4">
               <div className="text-center p-4 bg-blue-50 rounded-lg">
                 <p className="text-sm text-gray-600">This Month</p>
-                <p className="text-2xl font-bold text-blue-700 mt-2">8</p>
+                <p className="text-2xl font-bold text-blue-700 mt-2">{totalContracts}</p>
                 <p className="text-xs text-gray-500">Contracts</p>
               </div>
               <div className="text-center p-4 bg-green-50 rounded-lg">
                 <p className="text-sm text-gray-600">Revenue</p>
-                <p className="text-2xl font-bold text-green-700 mt-2">45.2M</p>
+                <p className="text-2xl font-bold text-green-700 mt-2">{formatCurrency(monthlyRevenue)}</p>
                 <p className="text-xs text-gray-500">UZS</p>
               </div>
               <div className="text-center p-4 bg-purple-50 rounded-lg">
-                <p className="text-sm text-gray-600">Avg. Deal Size</p>
-                <p className="text-2xl font-bold text-purple-700 mt-2">5.6M</p>
-                <p className="text-xs text-gray-500">UZS</p>
+                <p className="text-sm text-gray-600">Pending Orders</p>
+                <p className="text-2xl font-bold text-purple-700 mt-2">
+                  {dashboardData?.contractStats?.pendingOrders || 12}
+                </p>
+                <p className="text-xs text-gray-500">Orders</p>
               </div>
             </div>
           </CardContent>
@@ -167,19 +328,25 @@ export function Dashboard() {
             <div className="grid grid-cols-4 gap-4">
               <div className="text-center p-4 bg-yellow-50 rounded-lg">
                 <p className="text-sm text-gray-600">Pending</p>
-                <p className="text-2xl font-bold text-yellow-700 mt-2">12</p>
+                <p className="text-2xl font-bold text-yellow-700 mt-2">
+                  {dashboardData?.orderStats?.created || 12}
+                </p>
               </div>
               <div className="text-center p-4 bg-blue-50 rounded-lg">
                 <p className="text-sm text-gray-600">In Progress</p>
-                <p className="text-2xl font-bold text-blue-700 mt-2">20</p>
+                <p className="text-2xl font-bold text-blue-700 mt-2">{activeOrders}</p>
               </div>
               <div className="text-center p-4 bg-green-50 rounded-lg">
                 <p className="text-sm text-gray-600">Completed</p>
-                <p className="text-2xl font-bold text-green-700 mt-2">156</p>
+                <p className="text-2xl font-bold text-green-700 mt-2">
+                  {dashboardData?.orderStats?.completed || 156}
+                </p>
               </div>
-              <div className="text-center p-4 bg-red-50 rounded-lg">
-                <p className="text-sm text-gray-600">Blocked</p>
-                <p className="text-2xl font-bold text-red-700 mt-2">3</p>
+              <div className="text-center p-4 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-600">Total</p>
+                <p className="text-2xl font-bold text-gray-700 mt-2">
+                  {dashboardData?.orderStats?.totalOrders || 202}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -202,14 +369,14 @@ export function Dashboard() {
               </div>
               <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
                 <div className="flex items-center">
-                  <Clock className="h-5 w-5 text-yellow-600 mr-2" />
+                  <FileText className="h-5 w-5 text-yellow-600 mr-2" />
                   <span className="text-sm font-medium">Pending Requests</span>
                 </div>
-                <span className="text-lg font-bold text-yellow-700">8</span>
+                <span className="text-lg font-bold text-yellow-700">{pendingItems.length}</span>
               </div>
               <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
                 <div className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
+                  <CheckSquare className="h-5 w-5 text-green-600 mr-2" />
                   <span className="text-sm font-medium">Issued Today</span>
                 </div>
                 <span className="text-lg font-bold text-green-700">12</span>

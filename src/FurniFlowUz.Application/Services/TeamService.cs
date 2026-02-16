@@ -239,4 +239,16 @@ public class TeamService : ITeamService
         _unitOfWork.Teams.Update(team);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task<IEnumerable<TeamDto>> GetTeamsByLeaderIdAsync(int leaderId, CancellationToken cancellationToken = default)
+    {
+        // Get teams where the specified user is the team leader
+        var teams = await _dbContext.Teams
+            .Include(t => t.TeamLeader)
+            .Include(t => t.Members)
+            .Where(t => !t.IsDeleted && t.TeamLeaderId == leaderId)
+            .ToListAsync(cancellationToken);
+
+        return _mapper.Map<IEnumerable<TeamDto>>(teams);
+    }
 }

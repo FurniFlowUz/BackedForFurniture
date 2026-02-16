@@ -8,17 +8,10 @@ namespace FurniFlowUz.Application.DTOs.Production;
 public class CompleteTaskDto
 {
     /// <summary>
-    /// Task identifier
+    /// Actual hours spent on the task (optional)
     /// </summary>
-    [Required(ErrorMessage = "Task ID is required")]
-    public int? TaskId { get; set; }
-
-    /// <summary>
-    /// Actual hours spent on the task
-    /// </summary>
-    [Required(ErrorMessage = "Actual hours is required")]
-    [Range(0.1, double.MaxValue, ErrorMessage = "Actual hours must be greater than 0")]
-    public decimal ActualHours { get; set; }
+    [Range(0, double.MaxValue, ErrorMessage = "Actual hours must be 0 or greater")]
+    public decimal? ActualHours { get; set; }
 
     /// <summary>
     /// Notes about task completion

@@ -1,6 +1,7 @@
 using FurniFlowUz.Application.DTOs.Common;
 using FurniFlowUz.Application.DTOs.Production;
 using FurniFlowUz.Application.Interfaces;
+using FurniFlowUz.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,11 +17,13 @@ public class TeamsController : ControllerBase
 {
     private readonly ITeamService _teamService;
     private readonly ILogger<TeamsController> _logger;
+    private readonly ICurrentUserService _currentUserService;
 
-    public TeamsController(ITeamService teamService, ILogger<TeamsController> logger)
+    public TeamsController(ITeamService teamService, ILogger<TeamsController> logger, ICurrentUserService currentUserService)
     {
         _teamService = teamService;
         _logger = logger;
+        _currentUserService = currentUserService;
     }
 
     /// <summary>
@@ -34,6 +37,26 @@ public class TeamsController : ControllerBase
     {
         var teams = await _teamService.GetAllAsync(cancellationToken);
         return Ok(ApiResponse<IEnumerable<TeamDto>>.SuccessResponse(teams, "Teams retrieved successfully"));
+    }
+
+    /// <summary>
+    /// Gets teams where current user is the team leader
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>List of teams led by current user</returns>
+    [HttpGet("my-teams")]
+    [Authorize(Roles = "TeamLeader")]
+    public async Task<ActionResult<ApiResponse<IEnumerable<TeamDto>>>> GetMyTeams(
+        CancellationToken cancellationToken)
+    {
+        var currentUserId = _currentUserService.UserId;
+        if (currentUserId == null)
+        {
+            return Unauthorized(ApiResponse<IEnumerable<TeamDto>>.FailureResponse("User not authenticated"));
+        }
+
+        var teams = await _teamService.GetTeamsByLeaderIdAsync(currentUserId.Value, cancellationToken);
+        return Ok(ApiResponse<IEnumerable<TeamDto>>.SuccessResponse(teams, "My teams retrieved successfully"));
     }
 
     /// <summary>
