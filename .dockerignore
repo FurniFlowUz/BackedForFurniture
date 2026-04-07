@@ -1,0 +1,10 @@
+**/.git
+**/bin
+**/obj
+**/node_modules
+**/client
+**/*.md
+**/logs
+**/tmpclaude-*
+**/nul
+**/.claude

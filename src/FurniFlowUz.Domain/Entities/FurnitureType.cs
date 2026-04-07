@@ -40,7 +40,6 @@ public class FurnitureType : BaseAuditableEntity
     [ForeignKey(nameof(OrderId))]
     public Order Order { get; set; } = null!;
 
-    [ForeignKey(nameof(TechnicalSpecificationId))]
     public TechnicalSpecification? TechnicalSpecification { get; set; }
 
     [ForeignKey(nameof(TemplateId))]

@@ -25,6 +25,32 @@ public class ConstructorController : ControllerBase
     }
 
     /// <summary>
+    /// Gets constructor dashboard statistics
+    /// </summary>
+    [HttpGet("stats")]
+    public async Task<ActionResult<ApiResponse<object>>> GetStats(CancellationToken cancellationToken)
+    {
+        var userId = int.Parse(User.FindFirst("userId")?.Value ?? "0");
+        var orders = await _constructorService.GetOrdersByConstructorAsync(userId, cancellationToken);
+        var ordersList = orders.ToList();
+        var furnitureTypes = ordersList.SelectMany(o => o.FurnitureTypes ?? new List<FurnitureTypeDto>()).ToList();
+
+        var stats = new
+        {
+            totalOrders = ordersList.Count,
+            activeOrders = ordersList.Count(o => o.Status != "Completed" && o.Status != "Cancelled" && o.Status != "Delivered"),
+            completedOrders = ordersList.Count(o => o.Status == "Completed" || o.Status == "Delivered"),
+            totalFurnitureTypes = furnitureTypes.Count,
+            completedFurnitureTypes = furnitureTypes.Count(ft => ft.TechnicalSpecification?.IsLocked == true),
+            pendingFurnitureTypes = furnitureTypes.Count(ft => ft.TechnicalSpecification == null || ft.TechnicalSpecification.IsLocked != true),
+            totalDetails = furnitureTypes.Sum(ft => ft.Details?.Count ?? 0),
+            totalDrawings = furnitureTypes.Sum(ft => ft.Drawings?.Count ?? 0)
+        };
+
+        return Ok(ApiResponse<object>.SuccessResponse(stats, "Constructor stats retrieved successfully"));
+    }
+
+    /// <summary>
     /// Gets all orders assigned to the current constructor
     /// </summary>
     /// <param name="cancellationToken">Cancellation token</param>
@@ -351,7 +377,6 @@ public class ConstructorController : ControllerBase
     /// Completes and locks a technical specification, making it ready for production
     /// </summary>
     /// <param name="furnitureTypeId">Furniture type ID</param>
-    /// <param name="request">Completion data</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Success response</returns>
     [HttpPost("complete/{furnitureTypeId}")]

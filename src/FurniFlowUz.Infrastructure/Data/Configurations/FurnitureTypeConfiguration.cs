@@ -43,11 +43,6 @@ public class FurnitureTypeConfiguration : IEntityTypeConfiguration<FurnitureType
             .HasForeignKey(ft => ft.OrderId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasOne(ft => ft.TechnicalSpecification)
-            .WithOne(ts => ts.FurnitureType)
-            .HasForeignKey<FurnitureType>(ft => ft.TechnicalSpecificationId)
-            .OnDelete(DeleteBehavior.SetNull);
-
         builder.HasMany(ft => ft.Details)
             .WithOne(d => d.FurnitureType)
             .HasForeignKey(d => d.FurnitureTypeId)

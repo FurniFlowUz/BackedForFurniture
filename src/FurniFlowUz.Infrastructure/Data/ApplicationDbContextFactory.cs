@@ -11,11 +11,17 @@ public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<Applicati
 {
     public ApplicationDbContext CreateDbContext(string[] args)
     {
+        // Build configuration from appsettings
+        var configuration = new ConfigurationBuilder()
+            .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "../FurniFlowUz.API"))
+            .AddJsonFile("appsettings.json", optional: false)
+            .AddJsonFile("appsettings.Development.json", optional: true)
+            .Build();
+
         var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
 
-        // Use default connection string for migrations
-        optionsBuilder.UseSqlServer(
-            "Server=(localdb)\\mssqllocaldb;Database=FurniFlowUzDb;Trusted_Connection=True;MultipleActiveResultSets=true",
+        optionsBuilder.UseNpgsql(
+            configuration.GetConnectionString("DatabaseConnection"),
             b => b.MigrationsAssembly("FurniFlowUz.Infrastructure"));
 
         return new ApplicationDbContext(optionsBuilder.Options);

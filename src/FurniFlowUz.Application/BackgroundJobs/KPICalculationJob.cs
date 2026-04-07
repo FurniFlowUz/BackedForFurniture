@@ -65,7 +65,7 @@ public class KPICalculationJob
             {
                 var contractIds = completedOrdersList
                     .Where(o => o.ContractId.HasValue)
-                    .Select(o => o.ContractId.Value)
+                    .Select(o => o.ContractId!.Value)
                     .Distinct()
                     .ToList();
 
@@ -88,7 +88,7 @@ public class KPICalculationJob
             {
                 var completionTimes = completedOrdersList
                     .Where(o => o.CompletedAt.HasValue)
-                    .Select(o => (o.CompletedAt.Value - o.CreatedAt).TotalDays)
+                    .Select(o => (o.CompletedAt!.Value - o.CreatedAt).TotalDays)
                     .ToList();
 
                 if (completionTimes.Any())

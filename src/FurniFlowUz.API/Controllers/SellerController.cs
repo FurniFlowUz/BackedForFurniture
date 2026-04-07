@@ -11,7 +11,7 @@ namespace FurniFlowUz.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/seller")]
-[Authorize(Roles = "Salesperson")]
+[Authorize(Roles = "Salesperson,Director")]
 public class SellerController : ControllerBase
 {
     private readonly IContractService _contractService;

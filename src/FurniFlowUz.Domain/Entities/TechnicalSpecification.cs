@@ -17,6 +17,5 @@ public class TechnicalSpecification : BaseAuditableEntity
     public DateTime? CompletedAt { get; set; }
 
     // Navigation properties
-    [ForeignKey(nameof(FurnitureTypeId))]
     public FurnitureType FurnitureType { get; set; } = null!;
 }

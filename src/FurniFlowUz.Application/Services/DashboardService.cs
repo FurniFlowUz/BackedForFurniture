@@ -132,8 +132,8 @@ public class DashboardService : IDashboardService
         var completedTasks = filteredTasks.Where(t => t.Status == Domain.Enums.TaskStatus.Completed).ToList();
         var activeTasks = filteredTasks.Where(t => t.Status == Domain.Enums.TaskStatus.Accepted || t.Status == Domain.Enums.TaskStatus.InProgress).ToList();
 
-        var totalEstimatedHours = filteredTasks.Where(t => t.EstimatedHours.HasValue).Sum(t => t.EstimatedHours.Value);
-        var totalActualHours = completedTasks.Where(t => t.ActualHours.HasValue).Sum(t => t.ActualHours.Value);
+        var totalEstimatedHours = filteredTasks.Where(t => t.EstimatedHours.HasValue).Sum(t => t.EstimatedHours!.Value);
+        var totalActualHours = completedTasks.Where(t => t.ActualHours.HasValue).Sum(t => t.ActualHours!.Value);
 
         var efficiency = totalEstimatedHours > 0 ? (totalEstimatedHours / (totalActualHours > 0 ? totalActualHours : 1)) * 100 : 0;
 
@@ -214,7 +214,7 @@ public class DashboardService : IDashboardService
             if (order == null) continue;
 
             // Estimate task deadline based on estimated hours (simple calculation)
-            var estimatedCompletionDate = task.StartedAt.Value.AddHours((double)(task.EstimatedHours ?? 8));
+            var estimatedCompletionDate = task.StartedAt!.Value.AddHours((double)(task.EstimatedHours ?? 8));
 
             if (estimatedCompletionDate < today)
             {
@@ -241,11 +241,10 @@ public class DashboardService : IDashboardService
 
     public async Task<ProductionManagerDashboardDto> GetProductionManagerDashboardAsync(CancellationToken cancellationToken = default)
     {
-        // ✅ Step 1: Get current ProductionManager's Employee ID
-        var employeeId = await GetCurrentEmployeeIdAsync(cancellationToken);
-        if (!employeeId.HasValue)
+        // Step 1: Get current user ID (AssignedProductionManagerId is a User FK)
+        if (!_currentUserService.IsAuthenticated || !_currentUserService.UserId.HasValue)
         {
-            throw new UnauthorizedAccessException("ProductionManager employee record not found.");
+            throw new UnauthorizedAccessException("User is not authenticated.");
         }
 
         var currentUserId = _currentUserService.UserId!.Value;
@@ -284,8 +283,8 @@ public class DashboardService : IDashboardService
             : 0;
 
         var completedTasks = relevantTasks.Where(t => t.Status == Domain.Enums.TaskStatus.Completed).ToList();
-        var totalEstimatedHours = relevantTasks.Where(t => t.EstimatedHours.HasValue).Sum(t => t.EstimatedHours.Value);
-        var totalActualHours = completedTasks.Where(t => t.ActualHours.HasValue).Sum(t => t.ActualHours.Value);
+        var totalEstimatedHours = relevantTasks.Where(t => t.EstimatedHours.HasValue).Sum(t => t.EstimatedHours!.Value);
+        var totalActualHours = completedTasks.Where(t => t.ActualHours.HasValue).Sum(t => t.ActualHours!.Value);
         var efficiencyPercentage = totalEstimatedHours > 0 && totalActualHours > 0
             ? Math.Round((totalEstimatedHours / totalActualHours) * 100, 2)
             : 0;
@@ -431,7 +430,7 @@ public class DashboardService : IDashboardService
             if (order == null) continue;
 
             // Estimate task deadline based on estimated hours
-            var estimatedCompletionDate = task.StartedAt.Value.AddHours((double)(task.EstimatedHours ?? 8));
+            var estimatedCompletionDate = task.StartedAt!.Value.AddHours((double)(task.EstimatedHours ?? 8));
 
             if (estimatedCompletionDate < today)
             {
@@ -461,46 +460,32 @@ public class DashboardService : IDashboardService
     /// Constructor role: Returns only orders assigned to the constructor
     /// Other roles: Returns all orders (to be extended as needed)
     /// </summary>
-    private async Task<IEnumerable<FurniFlowUz.Domain.Entities.Order>> ApplyRoleBasedOrderFilteringAsync(
+    private Task<IEnumerable<FurniFlowUz.Domain.Entities.Order>> ApplyRoleBasedOrderFilteringAsync(
         IEnumerable<FurniFlowUz.Domain.Entities.Order> orders,
         CancellationToken cancellationToken)
     {
         if (!_currentUserService.IsAuthenticated)
         {
-            return Enumerable.Empty<FurniFlowUz.Domain.Entities.Order>();
+            return Task.FromResult(Enumerable.Empty<FurniFlowUz.Domain.Entities.Order>());
         }
 
         var currentRole = _currentUserService.Role;
 
         if (!Enum.TryParse<UserRole>(currentRole, out var userRole))
         {
-            return Enumerable.Empty<FurniFlowUz.Domain.Entities.Order>();
+            return Task.FromResult(Enumerable.Empty<FurniFlowUz.Domain.Entities.Order>());
         }
 
-        switch (userRole)
+        IEnumerable<FurniFlowUz.Domain.Entities.Order> result = userRole switch
         {
-            case UserRole.Director:
-                // Directors see all orders
-                return orders;
+            UserRole.Director => orders,
+            UserRole.Constructor => orders.Where(o => o.AssignedConstructorId == _currentUserService.UserId!.Value),
+            UserRole.ProductionManager => orders.Where(o => o.AssignedProductionManagerId == _currentUserService.UserId!.Value),
+            UserRole.Salesperson => orders.Where(o => o.CreatedBy == _currentUserService.UserId!.Value),
+            _ => Enumerable.Empty<FurniFlowUz.Domain.Entities.Order>()
+        };
 
-            case UserRole.Constructor:
-                // Constructors see only orders assigned to them
-                var currentUserId = _currentUserService.UserId.Value;
-                return orders.Where(o => o.AssignedConstructorId == currentUserId);
-
-            case UserRole.ProductionManager:
-                // Production Managers see only orders assigned to them
-                var pmUserId = _currentUserService.UserId.Value;
-                return orders.Where(o => o.AssignedProductionManagerId == pmUserId);
-
-            case UserRole.Salesperson:
-                // Salespeople see only orders they created
-                var salesUserId = _currentUserService.UserId.Value;
-                return orders.Where(o => o.CreatedBy == salesUserId);
-
-            default:
-                return Enumerable.Empty<FurniFlowUz.Domain.Entities.Order>();
-        }
+        return Task.FromResult(result);
     }
 
     #endregion

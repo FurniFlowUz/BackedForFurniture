@@ -59,21 +59,31 @@ public class AuditMiddleware
         {
             await _next(context);
         }
+        catch
+        {
+            // Restore original stream before rethrowing so ExceptionMiddleware can write to it
+            context.Response.Body = originalBodyStream;
+            throw;
+        }
         finally
         {
-            // Log the audit entry
-            await LogAuditEntry(
-                context,
-                unitOfWork,
-                request.Method,
-                request.Path,
-                requestBody,
-                startTime,
-                context.Response.StatusCode);
+            if (context.Response.Body == responseBody)
+            {
+                // Log the audit entry
+                await LogAuditEntry(
+                    context,
+                    unitOfWork,
+                    request.Method,
+                    request.Path,
+                    requestBody,
+                    startTime,
+                    context.Response.StatusCode);
 
-            // Copy response back to original stream
-            responseBody.Seek(0, SeekOrigin.Begin);
-            await responseBody.CopyToAsync(originalBodyStream);
+                // Copy response back to original stream
+                responseBody.Seek(0, SeekOrigin.Begin);
+                await responseBody.CopyToAsync(originalBodyStream);
+                context.Response.Body = originalBodyStream;
+            }
         }
     }
 

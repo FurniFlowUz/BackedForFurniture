@@ -152,14 +152,14 @@ public class WarehouseController : ControllerBase
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>List of material requests</returns>
     [HttpGet("material-requests")]
-    public async Task<ActionResult<ApiResponse<IEnumerable<MaterialRequestDto>>>> GetMaterialRequests(
+    public Task<ActionResult<ApiResponse<IEnumerable<MaterialRequestDto>>>> GetMaterialRequests(
         CancellationToken cancellationToken)
     {
         // Note: This method needs to be added to IWarehouseService interface
         // For now, return empty list as placeholder
-        return Ok(ApiResponse<IEnumerable<MaterialRequestDto>>.SuccessResponse(
+        return Task.FromResult<ActionResult<ApiResponse<IEnumerable<MaterialRequestDto>>>>(Ok(ApiResponse<IEnumerable<MaterialRequestDto>>.SuccessResponse(
             new List<MaterialRequestDto>(),
-            "Material requests retrieved successfully"));
+            "Material requests retrieved successfully")));
     }
 
     /// <summary>
@@ -171,20 +171,20 @@ public class WarehouseController : ControllerBase
     /// <returns>Success response</returns>
     [HttpPost("material-requests/{id}/confirm")]
     [Authorize(Roles = "TeamLeader,Director")]
-    public async Task<ActionResult<ApiResponse<object>>> ConfirmMaterialRequest(
+    public Task<ActionResult<ApiResponse<object>>> ConfirmMaterialRequest(
         [FromRoute] int id,
         [FromBody] ConfirmMaterialRequestDto request,
         CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
         {
-            return BadRequest(ApiResponse<object>.FailureResponse(
+            return Task.FromResult<ActionResult<ApiResponse<object>>>(BadRequest(ApiResponse<object>.FailureResponse(
                 "Invalid request data",
-                ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList()));
+                ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList())));
         }
 
         // Note: This method needs to be added to IWarehouseService interface
-        return Ok(ApiResponse<object>.SuccessResponse(null, "Material request confirmed successfully"));
+        return Task.FromResult<ActionResult<ApiResponse<object>>>(Ok(ApiResponse<object>.SuccessResponse(null, "Material request confirmed successfully")));
     }
 
     /// <summary>

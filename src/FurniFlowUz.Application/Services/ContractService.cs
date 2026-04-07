@@ -164,7 +164,7 @@ public class ContractService : IContractService
         // CUSTOMER HANDLING: Support both existing and new customer flows
         // ===================================================================
         int customerId;
-        Customer customer;
+        Customer? customer;
 
         // Validate: Either CustomerId OR NewCustomer must be provided (enforced by validator)
         bool hasCustomerId = request.CustomerId.HasValue && request.CustomerId.Value > 0;

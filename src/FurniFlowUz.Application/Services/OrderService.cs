@@ -353,20 +353,11 @@ public async Task AssignConstructorAsync(
         throw new NotFoundException(nameof(Order), orderId);
     }
 
-    // Constructor mavjudligini tekshirish
-    var constructor = await _unitOfWork.Employees.GetByIdAsync(constructorId, cancellationToken);
-    if (constructor == null)
-    {
-        throw new NotFoundException(nameof(Employee), constructorId);
-    }
-
-    var userConstructor = await _unitOfWork.Users.GetByIdAsync(
-        constructor.UserId,
-        cancellationToken);
-
+    // Validate constructor user exists and has correct role
+    var userConstructor = await _unitOfWork.Users.GetByIdAsync(constructorId, cancellationToken);
     if (userConstructor == null)
     {
-        throw new NotFoundException(nameof(User), constructor.UserId);
+        throw new NotFoundException(nameof(User), constructorId);
     }
 
     if (userConstructor.Role != UserRole.Constructor)
@@ -374,18 +365,13 @@ public async Task AssignConstructorAsync(
         throw new ValidationException("User must have Constructor role.");
     }
 
-    if (!constructor.IsActive)
+    if (!userConstructor.IsActive)
     {
         throw new ValidationException("Constructor is not active.");
     }
 
-    // ===============================
-    // 🔥 FIX: Assign User.Id, not Employee.Id
-    // ===============================
-
-    // CRITICAL: Order.AssignedConstructorId is FK to Users table (not Employees)
-    // Must assign constructor.UserId (User.Id), not constructorId (Employee.Id)
-    order.AssignedConstructorId = constructor.UserId;
+    // AssignedConstructorId is FK to Users table
+    order.AssignedConstructorId = constructorId;
 
     // 🔴 STATUSNI MAJBURIY YANGILAYMIZ
     order.Status = OrderStatus.Assigned;
@@ -399,7 +385,7 @@ public async Task AssignConstructorAsync(
         await _notificationService.CreateNotificationAsync(
             new CreateNotificationDto
             {
-                UserId = constructor.UserId,
+                UserId = constructorId,
                 Title = "Yangi Buyurtma Tayinlandi",
                 Message = $"{order.OrderNumber} raqamli buyurtma sizga tayinlandi",
                 Type = NotificationType.OrderAssigned.ToString()
@@ -418,27 +404,13 @@ public async Task AssignConstructorAsync(
             throw new NotFoundException(nameof(Order), orderId);
         }
 
-        // ⚠️ CRITICAL: productionManagerId is Employee.Id (NOT User.Id)
-        // Step 1: Fetch Employee record
-        var employee = await _unitOfWork.Employees.GetByIdAsync(productionManagerId, cancellationToken);
-        if (employee == null)
-        {
-            throw new NotFoundException("Employee", productionManagerId);
-        }
-
-        if (!employee.IsActive)
-        {
-            throw new ValidationException("Production manager employee is not active.");
-        }
-
-        // Step 2: Fetch linked User record via employee.UserId
-        var productionManager = await _unitOfWork.Users.GetByIdAsync(employee.UserId, cancellationToken);
+        // Validate production manager user exists and has correct role
+        var productionManager = await _unitOfWork.Users.GetByIdAsync(productionManagerId, cancellationToken);
         if (productionManager == null)
         {
-            throw new NotFoundException("User", employee.UserId);
+            throw new NotFoundException(nameof(User), productionManagerId);
         }
 
-        // Step 3: Validate User has ProductionManager role
         if (productionManager.Role != UserRole.ProductionManager)
         {
             throw new ValidationException("User must have ProductionManager role.");
@@ -446,12 +418,11 @@ public async Task AssignConstructorAsync(
 
         if (!productionManager.IsActive)
         {
-            throw new ValidationException("Production manager user is not active.");
+            throw new ValidationException("Production manager is not active.");
         }
 
-        // ⚠️ CRITICAL: Assign User.Id (NOT Employee.Id)
-        // Order.AssignedProductionManagerId is FK to Users table
-        order.AssignedProductionManagerId = employee.UserId;
+        // AssignedProductionManagerId is FK to Users table
+        order.AssignedProductionManagerId = productionManagerId;
         order.UpdatedAt = DateTime.UtcNow;
 
         _unitOfWork.Orders.Update(order);
@@ -463,7 +434,7 @@ public async Task AssignConstructorAsync(
             Title = "Buyurtma Tayinlandi",
             Message = $"{order.OrderNumber} raqamli buyurtma sizga ishlab chiqarish boshqaruvi uchun tayinlandi.",
             Type = nameof(NotificationType.TaskAssigned),
-            UserId = employee.UserId  // ⚠️ Use User.Id for notifications
+            UserId = productionManagerId
         }, cancellationToken);
     }
 

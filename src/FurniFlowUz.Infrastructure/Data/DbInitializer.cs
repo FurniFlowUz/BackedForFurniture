@@ -351,28 +351,7 @@ public static class DbInitializer
 
     private static async Task EnsureMigrationHistoryExists(ApplicationDbContext context)
     {
-        string sql = @"
-IF EXISTS (SELECT * FROM sys.tables WHERE name = 'Categories')
-BEGIN
-    IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = '__EFMigrationsHistory')
-    BEGIN
-        CREATE TABLE [__EFMigrationsHistory] (
-            [MigrationId] nvarchar(150) NOT NULL,
-            [ProductVersion] nvarchar(32) NOT NULL,
-            CONSTRAINT [PK___EFMigrationsHistory] PRIMARY KEY ([MigrationId])
-        );
-    END
-END
-
-IF EXISTS (SELECT * FROM sys.tables WHERE name = 'Categories')
-BEGIN
-    IF NOT EXISTS (SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = '20260216131707_InitialCreate')
-    BEGIN
-        INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
-        VALUES ('20260216131707_InitialCreate', '8.0.0');
-    END
-END
-";
-        await context.Database.ExecuteSqlRawAsync(sql);
+        // No-op: migrations are handled by EF Core MigrateAsync() above
+        await Task.CompletedTask;
     }
 }

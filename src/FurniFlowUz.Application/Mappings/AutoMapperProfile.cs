@@ -400,7 +400,7 @@ public class AutoMapperProfile : Profile
 
         // CreateDetailDto to Detail
         CreateMap<CreateDetailDto, Detail>()
-            .ForMember(dest => dest.FurnitureTypeId, opt => opt.MapFrom(src => (int)src.FurnitureTypeId))
+            .ForMember(dest => dest.FurnitureTypeId, opt => opt.MapFrom(src => src.FurnitureTypeId))
             .ForMember(dest => dest.Material, opt => opt.Ignore())
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
@@ -430,11 +430,17 @@ public class AutoMapperProfile : Profile
         CreateMap<Drawing, DrawingDto>().ReverseMap();
 
         // TechnicalSpecification to TechnicalSpecificationDto
-        CreateMap<TechnicalSpecification, TechnicalSpecificationDto>().ReverseMap();
+        CreateMap<TechnicalSpecification, TechnicalSpecificationDto>()
+            .ForMember(dest => dest.CreatedBy, opt => opt.Ignore())
+            .ForMember(dest => dest.LockedBy, opt => opt.Ignore())
+            .ForMember(dest => dest.LockedAt, opt => opt.MapFrom(src => src.CompletedAt));
+        CreateMap<TechnicalSpecificationDto, TechnicalSpecification>()
+            .ForMember(dest => dest.CreatedBy, opt => opt.Ignore())
+            .ForMember(dest => dest.CompletedAt, opt => opt.MapFrom(src => src.LockedAt));
 
         // CreateTechnicalSpecificationDto to TechnicalSpecification
         CreateMap<CreateTechnicalSpecificationDto, TechnicalSpecification>()
-            .ForMember(dest => dest.FurnitureTypeId, opt => opt.MapFrom(src => (int)src.FurnitureTypeId))
+            .ForMember(dest => dest.FurnitureTypeId, opt => opt.MapFrom(src => src.FurnitureTypeId!.Value))
             .ForMember(dest => dest.IsLocked, opt => opt.MapFrom(src => false))
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.CompletedAt, opt => opt.Ignore())

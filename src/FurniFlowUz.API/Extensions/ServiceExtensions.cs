@@ -6,7 +6,7 @@ using FurniFlowUz.Infrastructure.Data;
 using FurniFlowUz.Infrastructure.Repositories;
 using FurniFlowUz.Infrastructure.Services;
 using Hangfire;
-using Hangfire.SqlServer;
+using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -74,10 +74,12 @@ public static class ServiceExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        // Register DbContext
+        // Register DbContext — prefer DATABASE_URL env var (Railway), fall back to appsettings
+        var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL")
+            ?? configuration.GetConnectionString("DatabaseConnection");
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseNpgsql(
-                configuration.GetConnectionString("DefaultConnection"),
+                connectionString,
                 b => b.MigrationsAssembly("FurniFlowUz.Infrastructure")));
 
         // Register Unit of Work and Repositories
@@ -221,6 +223,13 @@ public static class ServiceExtensions
         var allowedOrigins = configuration.GetSection("CorsSettings:AllowedOrigins").Get<string[]>()
             ?? new[] { "http://localhost:3000", "http://localhost:5173" };
 
+        // Add Railway frontend URL from env var if set
+        var frontendUrl = Environment.GetEnvironmentVariable("FRONTEND_URL");
+        if (!string.IsNullOrEmpty(frontendUrl))
+        {
+            allowedOrigins = allowedOrigins.Append(frontendUrl).ToArray();
+        }
+
         services.AddCors(options =>
         {
             options.AddPolicy("AllowFrontend", builder =>
@@ -242,8 +251,11 @@ public static class ServiceExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        var hangfireConnStr = Environment.GetEnvironmentVariable("DATABASE_URL")
+            ?? configuration.GetConnectionString("DatabaseConnection");
         services.AddHangfire(config =>
-            config.UseSqlServerStorage(configuration.GetConnectionString("DefaultConnection")));
+            config.UsePostgreSqlStorage(options =>
+                options.UseNpgsqlConnection(hangfireConnStr)));
 
         services.AddHangfireServer();
 

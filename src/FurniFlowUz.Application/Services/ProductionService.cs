@@ -172,10 +172,10 @@ public class ProductionService : IProductionService
         }
 
         // Validate worker exists and has correct role
-        var worker = await _unitOfWork.Users.GetByIdAsync(request.WorkerId.Value, cancellationToken);
+        var worker = await _unitOfWork.Users.GetByIdAsync(request.WorkerId!.Value, cancellationToken);
         if (worker == null)
         {
-            throw new NotFoundException(nameof(User), request.WorkerId.Value);
+            throw new NotFoundException(nameof(User), request.WorkerId!.Value);
         }
 
         if (worker.Role != UserRole.Worker)
@@ -189,7 +189,8 @@ public class ProductionService : IProductionService
         }
 
         // Check if worker is member of the task's team
-        var team = await _unitOfWork.Teams.GetByIdAsync(task.TeamId, cancellationToken);
+        var team = await _unitOfWork.Teams.GetByIdAsync(task.TeamId, cancellationToken)
+            ?? throw new NotFoundException(nameof(Team), task.TeamId);
         if (!team.Members.Any(m => m.Id == request.WorkerId))
         {
             throw new ValidationException("Worker must be a member of the task's team.");
@@ -241,7 +242,8 @@ public class ProductionService : IProductionService
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Send notification to team leader
-        var team = await _unitOfWork.Teams.GetByIdAsync(task.TeamId, cancellationToken);
+        var team = await _unitOfWork.Teams.GetByIdAsync(task.TeamId, cancellationToken)
+            ?? throw new NotFoundException(nameof(Team), task.TeamId);
         var message = $"'{task.Title}' vazifasi ishchi tomonidan qabul qilindi.";
 
         await _notificationService.CreateNotificationAsync(new CreateNotificationDto
@@ -281,7 +283,8 @@ public class ProductionService : IProductionService
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Send notification to team leader
-        var team = await _unitOfWork.Teams.GetByIdAsync(task.TeamId, cancellationToken);
+        var team = await _unitOfWork.Teams.GetByIdAsync(task.TeamId, cancellationToken)
+            ?? throw new NotFoundException(nameof(Team), task.TeamId);
         await _notificationService.CreateNotificationAsync(new CreateNotificationDto
         {
             Title = "Vazifa Yakunlandi",
@@ -292,7 +295,7 @@ public class ProductionService : IProductionService
 
         // Send notification to production manager
         var order = await _unitOfWork.Orders.GetByIdAsync(task.OrderId, cancellationToken);
-        if (order.AssignedProductionManagerId.HasValue)
+        if (order?.AssignedProductionManagerId.HasValue == true)
         {
             await _notificationService.CreateNotificationAsync(new CreateNotificationDto
             {
@@ -433,7 +436,8 @@ public class ProductionService : IProductionService
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Send notification
-        var team = await _unitOfWork.Teams.GetByIdAsync(task.TeamId, cancellationToken);
+        var team = await _unitOfWork.Teams.GetByIdAsync(task.TeamId, cancellationToken)
+            ?? throw new NotFoundException(nameof(Team), task.TeamId);
         await _notificationService.CreateNotificationAsync(new CreateNotificationDto
         {
             Title = "Vazifa Boshlandi",

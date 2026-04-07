@@ -60,18 +60,16 @@ public class EmployeesController : ControllerBase
     {
         _logger.LogInformation("ProductionManager requesting team leaders list for assignment");
 
-        var teamLeaders = await _dbContext.Employees
-            .Include(e => e.User)
-            .Where(e =>
-                e.IsActive &&
-                e.User.IsActive &&
-                e.User.Role == Domain.Enums.UserRole.TeamLeader)
-            .OrderBy(e => e.FullName)
-            .Select(e => new
+        var teamLeaders = await _dbContext.Users
+            .Where(u =>
+                u.IsActive &&
+                u.Role == Domain.Enums.UserRole.TeamLeader)
+            .OrderBy(u => u.FirstName)
+            .Select(u => new
             {
-                id = e.UserId,  // Return User.Id instead of Employee.Id for Team.TeamLeaderId
-                employeeId = e.Id,
-                name = e.FullName
+                id = u.Id,
+                employeeId = u.Id,
+                name = u.FirstName + " " + u.LastName
             })
             .ToListAsync(cancellationToken);
 
