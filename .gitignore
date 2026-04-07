@@ -153,3 +153,17 @@ wwwroot/uploads/
 logs/
 *.db
 *.sqlite
+
+# Claude temp files
+tmpclaude-*
+nul
+
+# Build artifacts
+logs/
+*.txt
+!README.md
+
+# Seed/test files
+seed_demo_data.sql
+set_db_url.sh
+
