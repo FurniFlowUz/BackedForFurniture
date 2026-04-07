@@ -1,0 +1,13 @@
+[phases.setup]
+nixPkgs = ["dotnet-sdk_9"]
+
+[phases.build]
+cmds = ["dotnet publish src/FurniFlowUz.API/FurniFlowUz.API.csproj -c Release -o out"]
+
+[start]
+cmd = "dotnet out/FurniFlowUz.API.dll"
+
+[variables]
+ASPNETCORE_URLS = "http://0.0.0.0:${PORT:-8080}"
+ASPNETCORE_ENVIRONMENT = "Production"
+DOTNET_RUNNING_IN_CONTAINER = "true"

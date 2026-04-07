@@ -1,6 +1,6 @@
 [build]
-builder = "dockerfile"
-dockerfilePath = "Dockerfile"
+builder = "nixpacks"
+nixpacksConfigPath = "nixpacks.toml"
 
 [deploy]
 restartPolicyType = "ON_FAILURE"
