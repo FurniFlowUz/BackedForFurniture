@@ -12,7 +12,7 @@ namespace FurniFlowUz.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Constructor,Director")]
+[Authorize(Roles = "Constructor,Director,ProductionManager,TeamLeader")]
 public class ConstructorController : ControllerBase
 {
     private readonly IConstructorService _constructorService;
@@ -150,6 +150,21 @@ public class ConstructorController : ControllerBase
     {
         await _constructorService.DeleteFurnitureTypeAsync(id, cancellationToken);
         return Ok(ApiResponse<object>.SuccessResponse(null, "Furniture type deleted successfully"));
+    }
+
+    /// <summary>
+    /// Force deletes a furniture type even if technical specification is locked
+    /// </summary>
+    /// <param name="id">Furniture type ID</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Success response</returns>
+    [HttpDelete("furniture-types/{id}/force")]
+    public async Task<ActionResult<ApiResponse<object>>> ForceDeleteFurnitureType(
+        [FromRoute] int id,
+        CancellationToken cancellationToken)
+    {
+        await _constructorService.ForceDeleteFurnitureTypeAsync(id, cancellationToken);
+        return Ok(ApiResponse<object>.SuccessResponse(null, "Furniture type force deleted successfully"));
     }
 
     /// <summary>
@@ -354,4 +369,101 @@ public class ConstructorController : ControllerBase
         await _constructorService.CompleteTechnicalSpecificationAsync(furnitureTypeId, cancellationToken);
         return Ok(ApiResponse<object>.SuccessResponse(null, "Technical specification completed and locked successfully"));
     }
+
+    /// <summary>
+    /// Completes a furniture type with all data (details, technical spec) in one request
+    /// </summary>
+    /// <param name="furnitureTypeId">Furniture type ID</param>
+    /// <param name="request">Complete furniture type data</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Success response</returns>
+    [HttpPost("complete-with-data/{furnitureTypeId}")]
+    public async Task<ActionResult<ApiResponse<object>>> CompleteFurnitureTypeWithData(
+        [FromRoute] int furnitureTypeId,
+        [FromBody] CompleteFurnitureTypeDto request,
+        CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ApiResponse<object>.FailureResponse(
+                "Invalid request data",
+                ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList()));
+        }
+
+        await _constructorService.CompleteFurnitureTypeWithDataAsync(furnitureTypeId, request, cancellationToken);
+        return Ok(ApiResponse<object>.SuccessResponse(null, "Furniture type completed successfully with all data"));
+    }
+
+    #region Order Images
+
+    /// <summary>
+    /// Uploads an image for an order (room photo or design reference)
+    /// </summary>
+    /// <param name="orderId">Order ID</param>
+    /// <param name="imageType">Image type: "room" or "design"</param>
+    /// <param name="file">Image file</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Uploaded image information</returns>
+    [HttpPost("order-images")]
+    [Authorize(Roles = "Constructor,Director,Salesperson")]
+    public async Task<ActionResult<ApiResponse<OrderImageDto>>> UploadOrderImage(
+        [FromForm] int orderId,
+        [FromForm] string imageType,
+        [FromForm] IFormFile file,
+        CancellationToken cancellationToken)
+    {
+        if (file == null || file.Length == 0)
+        {
+            return BadRequest(ApiResponse<OrderImageDto>.FailureResponse("File is required"));
+        }
+
+        if (string.IsNullOrEmpty(imageType) || (imageType != "room" && imageType != "design"))
+        {
+            return BadRequest(ApiResponse<OrderImageDto>.FailureResponse("Image type must be 'room' or 'design'"));
+        }
+
+        var request = new UploadOrderImageRequest
+        {
+            OrderId = orderId,
+            ImageType = imageType,
+            File = file
+        };
+
+        var result = await _constructorService.UploadOrderImageAsync(request, cancellationToken);
+        return Ok(ApiResponse<OrderImageDto>.SuccessResponse(result, "Image uploaded successfully"));
+    }
+
+    /// <summary>
+    /// Gets all images for a specific order
+    /// </summary>
+    /// <param name="orderId">Order ID</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>List of order images</returns>
+    [HttpGet("orders/{orderId}/images")]
+    [Authorize(Roles = "Constructor,Director,Salesperson")]
+    public async Task<ActionResult<ApiResponse<IEnumerable<OrderImageDto>>>> GetOrderImages(
+        [FromRoute] int orderId,
+        CancellationToken cancellationToken)
+    {
+        var images = await _constructorService.GetOrderImagesAsync(orderId, cancellationToken);
+        return Ok(ApiResponse<IEnumerable<OrderImageDto>>.SuccessResponse(images, "Images retrieved successfully"));
+    }
+
+    /// <summary>
+    /// Deletes an order image
+    /// </summary>
+    /// <param name="imageId">Image ID</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Success response</returns>
+    [HttpDelete("order-images/{imageId}")]
+    [Authorize(Roles = "Constructor,Director,Salesperson")]
+    public async Task<ActionResult<ApiResponse<object>>> DeleteOrderImage(
+        [FromRoute] int imageId,
+        CancellationToken cancellationToken)
+    {
+        await _constructorService.DeleteOrderImageAsync(imageId, cancellationToken);
+        return Ok(ApiResponse<object>.SuccessResponse(null, "Image deleted successfully"));
+    }
+
+    #endregion
 }

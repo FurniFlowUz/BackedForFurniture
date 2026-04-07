@@ -13,10 +13,25 @@ public class FurnitureType : BaseAuditableEntity
     [Required]
     public int OrderId { get; set; }
 
+    /// <summary>
+    /// OrderCategory ID - indicates which order-category relationship this furniture type belongs to
+    /// </summary>
+    public int? OrderCategoryId { get; set; }
+
     [Column(TypeName = "decimal(5,2)")]
     public decimal ProgressPercentage { get; set; } = 0;
 
     public int? TechnicalSpecificationId { get; set; }
+
+    /// <summary>
+    /// Template ID if this furniture type was created from a template
+    /// </summary>
+    public int? TemplateId { get; set; }
+
+    /// <summary>
+    /// Quantity of this furniture type in the order
+    /// </summary>
+    public int Quantity { get; set; } = 1;
 
     [MaxLength(1000)]
     public string? Notes { get; set; }
@@ -27,6 +42,12 @@ public class FurnitureType : BaseAuditableEntity
 
     [ForeignKey(nameof(TechnicalSpecificationId))]
     public TechnicalSpecification? TechnicalSpecification { get; set; }
+
+    [ForeignKey(nameof(TemplateId))]
+    public FurnitureTypeTemplate? Template { get; set; }
+
+    [ForeignKey(nameof(OrderCategoryId))]
+    public OrderCategory? OrderCategory { get; set; }
 
     public ICollection<Detail> Details { get; set; } = new List<Detail>();
     public ICollection<Drawing> Drawings { get; set; } = new List<Drawing>();

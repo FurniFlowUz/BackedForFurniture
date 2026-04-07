@@ -1,5 +1,6 @@
 using AutoMapper;
 using FurniFlowUz.Application.DTOs.CategoryAssignment;
+using FurniFlowUz.Application.DTOs.Constructor;
 using FurniFlowUz.Application.Exceptions;
 using FurniFlowUz.Application.Interfaces;
 using FurniFlowUz.Domain.Entities;
@@ -121,23 +122,68 @@ public class CategoryAssignmentService : ICategoryAssignmentService
         var assignments = await _unitOfWork.CategoryAssignments.GetPagedAsync(
             pageNumber: 1,
             pageSize: 10000,
-            includeProperties: "Order,Order.Customer,FurnitureType,TeamLeader,Team,DetailTasks",
+            includeProperties: "Order,Order.Customer,FurnitureType,FurnitureType.OrderCategory,FurnitureType.OrderCategory.Category,TeamLeader,Team,DetailTasks",
             cancellationToken: cancellationToken);
+
+        // Get all FurnitureType IDs to fetch Details separately
+        var furnitureTypeIds = assignments
+            .Where(a => a.FurnitureTypeId > 0)
+            .Select(a => a.FurnitureTypeId)
+            .Distinct()
+            .ToList();
+
+        // Fetch all Details for these FurnitureTypes
+        var allDetails = await _unitOfWork.Details.FindAsync(
+            d => furnitureTypeIds.Contains(d.FurnitureTypeId),
+            cancellationToken);
+        var detailsByFurnitureType = allDetails.GroupBy(d => d.FurnitureTypeId)
+            .ToDictionary(g => g.Key, g => g.ToList());
 
         var result = new List<CategoryAssignmentSummaryDto>();
         foreach (var assignment in assignments)
         {
-            var dto = _mapper.Map<CategoryAssignmentSummaryDto>(assignment);
-            dto.OrderNumber = assignment.Order?.OrderNumber ?? "";
-            dto.CustomerName = assignment.Order?.Customer?.FullName ?? "";
-            dto.FurnitureTypeName = assignment.FurnitureType?.Name ?? "";
-            dto.TeamLeaderName = $"{assignment.TeamLeader?.FirstName} {assignment.TeamLeader?.LastName}".Trim();
-            dto.TeamName = assignment.Team?.Name ?? "";
+            var dto = new CategoryAssignmentSummaryDto
+            {
+                Id = assignment.Id,
+                OrderId = assignment.OrderId,
+                OrderNumber = assignment.Order?.OrderNumber ?? "",
+                CustomerName = assignment.Order?.Customer?.FullName ?? "",
+                FurnitureTypeId = assignment.FurnitureTypeId,
+                FurnitureTypeName = assignment.FurnitureType?.Name ?? "",
+                CategoryName = assignment.FurnitureType?.OrderCategory?.Category?.Name ?? assignment.FurnitureType?.Name ?? "",
+                TeamLeaderId = assignment.TeamLeaderId,
+                TeamLeaderName = $"{assignment.TeamLeader?.FirstName} {assignment.TeamLeader?.LastName}".Trim(),
+                TeamId = assignment.TeamId,
+                TeamName = assignment.Team?.Name ?? "",
+                Status = assignment.Status.ToString(),
+                AssignedAt = assignment.AssignedAt,
+                StartedAt = assignment.StartedAt,
+                CompletedAt = assignment.CompletedAt
+            };
 
             var totalTasks = assignment.DetailTasks?.Count ?? 0;
             var completedTasks = assignment.DetailTasks?.Count(t => t.Status == DetailTaskStatus.Completed || t.Status == DetailTaskStatus.QCPassed) ?? 0;
             dto.TaskProgress = $"{completedTasks}/{totalTasks}";
             dto.CompletionPercent = totalTasks > 0 ? Math.Round((decimal)completedTasks / totalTasks * 100, 2) : 0;
+
+            // Add Constructor's Details for Team Leader - fetch separately
+            if (detailsByFurnitureType.TryGetValue(assignment.FurnitureTypeId, out var details) && details.Any())
+            {
+                dto.Details = details.Select(d => new DetailDto
+                {
+                    Id = d.Id,
+                    Name = d.Name,
+                    Width = d.Width ?? 0,
+                    Height = d.Height ?? 0,
+                    Thickness = d.Thickness ?? 0,
+                    Quantity = d.Quantity,
+                    FurnitureTypeId = d.FurnitureTypeId,
+                    Notes = d.Notes,
+                    CreatedAt = d.CreatedAt,
+                    UpdatedAt = d.UpdatedAt
+                }).ToList();
+                dto.DetailsCount = dto.Details.Count;
+            }
 
             result.Add(dto);
         }
@@ -177,23 +223,68 @@ public class CategoryAssignmentService : ICategoryAssignmentService
             pageNumber: 1,
             pageSize: 10000,
             filter: a => a.TeamLeaderId == teamLeaderId,
-            includeProperties: "Order,Order.Customer,FurnitureType,TeamLeader,Team,DetailTasks",
+            includeProperties: "Order,Order.Customer,FurnitureType,FurnitureType.OrderCategory,FurnitureType.OrderCategory.Category,TeamLeader,Team,DetailTasks",
             cancellationToken: cancellationToken);
+
+        // Get all FurnitureType IDs to fetch Details separately
+        var furnitureTypeIds = assignments
+            .Where(a => a.FurnitureTypeId > 0)
+            .Select(a => a.FurnitureTypeId)
+            .Distinct()
+            .ToList();
+
+        // Fetch all Details for these FurnitureTypes
+        var allDetails = await _unitOfWork.Details.FindAsync(
+            d => furnitureTypeIds.Contains(d.FurnitureTypeId),
+            cancellationToken);
+        var detailsByFurnitureType = allDetails.GroupBy(d => d.FurnitureTypeId)
+            .ToDictionary(g => g.Key, g => g.ToList());
 
         var result = new List<CategoryAssignmentSummaryDto>();
         foreach (var assignment in assignments)
         {
-            var dto = _mapper.Map<CategoryAssignmentSummaryDto>(assignment);
-            dto.OrderNumber = assignment.Order?.OrderNumber ?? "";
-            dto.CustomerName = assignment.Order?.Customer?.FullName ?? "";
-            dto.FurnitureTypeName = assignment.FurnitureType?.Name ?? "";
-            dto.TeamLeaderName = $"{assignment.TeamLeader?.FirstName} {assignment.TeamLeader?.LastName}".Trim();
-            dto.TeamName = assignment.Team?.Name ?? "";
+            var dto = new CategoryAssignmentSummaryDto
+            {
+                Id = assignment.Id,
+                OrderId = assignment.OrderId,
+                OrderNumber = assignment.Order?.OrderNumber ?? "",
+                CustomerName = assignment.Order?.Customer?.FullName ?? "",
+                FurnitureTypeId = assignment.FurnitureTypeId,
+                FurnitureTypeName = assignment.FurnitureType?.Name ?? "",
+                CategoryName = assignment.FurnitureType?.OrderCategory?.Category?.Name ?? assignment.FurnitureType?.Name ?? "",
+                TeamLeaderId = assignment.TeamLeaderId,
+                TeamLeaderName = $"{assignment.TeamLeader?.FirstName} {assignment.TeamLeader?.LastName}".Trim(),
+                TeamId = assignment.TeamId,
+                TeamName = assignment.Team?.Name ?? "",
+                Status = assignment.Status.ToString(),
+                AssignedAt = assignment.AssignedAt,
+                StartedAt = assignment.StartedAt,
+                CompletedAt = assignment.CompletedAt
+            };
 
             var totalTasks = assignment.DetailTasks?.Count ?? 0;
             var completedTasks = assignment.DetailTasks?.Count(t => t.Status == DetailTaskStatus.Completed || t.Status == DetailTaskStatus.QCPassed) ?? 0;
             dto.TaskProgress = $"{completedTasks}/{totalTasks}";
             dto.CompletionPercent = totalTasks > 0 ? Math.Round((decimal)completedTasks / totalTasks * 100, 2) : 0;
+
+            // Add Constructor's Details for Team Leader - fetch separately
+            if (detailsByFurnitureType.TryGetValue(assignment.FurnitureTypeId, out var details) && details.Any())
+            {
+                dto.Details = details.Select(d => new DetailDto
+                {
+                    Id = d.Id,
+                    Name = d.Name,
+                    Width = d.Width ?? 0,
+                    Height = d.Height ?? 0,
+                    Thickness = d.Thickness ?? 0,
+                    Quantity = d.Quantity,
+                    FurnitureTypeId = d.FurnitureTypeId,
+                    Notes = d.Notes,
+                    CreatedAt = d.CreatedAt,
+                    UpdatedAt = d.UpdatedAt
+                }).ToList();
+                dto.DetailsCount = dto.Details.Count;
+            }
 
             result.Add(dto);
         }
@@ -207,23 +298,68 @@ public class CategoryAssignmentService : ICategoryAssignmentService
             pageNumber: 1,
             pageSize: 10000,
             filter: a => a.OrderId == orderId,
-            includeProperties: "Order,Order.Customer,FurnitureType,TeamLeader,Team,DetailTasks",
+            includeProperties: "Order,Order.Customer,FurnitureType,FurnitureType.OrderCategory,FurnitureType.OrderCategory.Category,TeamLeader,Team,FurnitureType.Details",
             cancellationToken: cancellationToken);
+
+        // Get all FurnitureType IDs to fetch Details separately
+        var furnitureTypeIds = assignments
+            .Where(a => a.FurnitureTypeId > 0)
+            .Select(a => a.FurnitureTypeId)
+            .Distinct()
+            .ToList();
+
+        // Fetch all Details for these FurnitureTypes
+        var allDetails = await _unitOfWork.Details.FindAsync(
+            d => furnitureTypeIds.Contains(d.FurnitureTypeId),
+            cancellationToken);
+        var detailsByFurnitureType = allDetails.GroupBy(d => d.FurnitureTypeId)
+            .ToDictionary(g => g.Key, g => g.ToList());
 
         var result = new List<CategoryAssignmentSummaryDto>();
         foreach (var assignment in assignments)
         {
-            var dto = _mapper.Map<CategoryAssignmentSummaryDto>(assignment);
-            dto.OrderNumber = assignment.Order?.OrderNumber ?? "";
-            dto.CustomerName = assignment.Order?.Customer?.FullName ?? "";
-            dto.FurnitureTypeName = assignment.FurnitureType?.Name ?? "";
-            dto.TeamLeaderName = $"{assignment.TeamLeader?.FirstName} {assignment.TeamLeader?.LastName}".Trim();
-            dto.TeamName = assignment.Team?.Name ?? "";
+            var dto = new CategoryAssignmentSummaryDto
+            {
+                Id = assignment.Id,
+                OrderId = assignment.OrderId,
+                OrderNumber = assignment.Order?.OrderNumber ?? "",
+                CustomerName = assignment.Order?.Customer?.FullName ?? "",
+                FurnitureTypeId = assignment.FurnitureTypeId,
+                FurnitureTypeName = assignment.FurnitureType?.Name ?? "",
+                CategoryName = assignment.FurnitureType?.OrderCategory?.Category?.Name ?? assignment.FurnitureType?.Name ?? "",
+                TeamLeaderId = assignment.TeamLeaderId,
+                TeamLeaderName = $"{assignment.TeamLeader?.FirstName} {assignment.TeamLeader?.LastName}".Trim(),
+                TeamId = assignment.TeamId,
+                TeamName = assignment.Team?.Name ?? "",
+                Status = assignment.Status.ToString(),
+                AssignedAt = assignment.AssignedAt,
+                StartedAt = assignment.StartedAt,
+                CompletedAt = assignment.CompletedAt
+            };
 
             var totalTasks = assignment.DetailTasks?.Count ?? 0;
             var completedTasks = assignment.DetailTasks?.Count(t => t.Status == DetailTaskStatus.Completed || t.Status == DetailTaskStatus.QCPassed) ?? 0;
             dto.TaskProgress = $"{completedTasks}/{totalTasks}";
             dto.CompletionPercent = totalTasks > 0 ? Math.Round((decimal)completedTasks / totalTasks * 100, 2) : 0;
+
+            // Add Constructor's Details for Team Leader - fetch separately
+            if (detailsByFurnitureType.TryGetValue(assignment.FurnitureTypeId, out var details) && details.Any())
+            {
+                dto.Details = details.Select(d => new DetailDto
+                {
+                    Id = d.Id,
+                    Name = d.Name,
+                    Width = d.Width ?? 0,
+                    Height = d.Height ?? 0,
+                    Thickness = d.Thickness ?? 0,
+                    Quantity = d.Quantity,
+                    FurnitureTypeId = d.FurnitureTypeId,
+                    Notes = d.Notes,
+                    CreatedAt = d.CreatedAt,
+                    UpdatedAt = d.UpdatedAt
+                }).ToList();
+                dto.DetailsCount = dto.Details.Count;
+            }
 
             result.Add(dto);
         }
@@ -371,5 +507,156 @@ public class CategoryAssignmentService : ICategoryAssignmentService
 
         _unitOfWork.CategoryAssignments.Remove(assignment);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<CategoryAssignmentDto> CreateSimpleAsync(SimpleCategoryAssignmentDto request, CancellationToken cancellationToken = default)
+    {
+        // Validate order exists
+        var order = await _unitOfWork.Orders.GetByIdAsync(request.OrderId, cancellationToken);
+        if (order == null)
+        {
+            throw new NotFoundException(nameof(Order), request.OrderId);
+        }
+
+        // Validate team leader exists
+        var teamLeader = await _unitOfWork.Users.GetByIdAsync(request.TeamLeaderId, cancellationToken);
+        if (teamLeader == null || teamLeader.Role != UserRole.TeamLeader)
+        {
+            throw new ValidationException("Invalid team leader specified.");
+        }
+
+        // Find or create a default team for this team leader
+        var teams = await _unitOfWork.Teams.FindAsync(
+            t => t.TeamLeaderId == request.TeamLeaderId,
+            cancellationToken);
+        var team = teams.FirstOrDefault();
+
+        if (team == null)
+        {
+            // Create a default team for this team leader
+            team = new Team
+            {
+                Name = $"{teamLeader.FirstName}'s Team",
+                TeamLeaderId = request.TeamLeaderId,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+            await _unitOfWork.Teams.AddAsync(team, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+
+        // Find Category by name
+        var categories = await _unitOfWork.Categories.FindAsync(
+            c => c.Name.ToLower() == request.CategoryName.ToLower(),
+            cancellationToken);
+        var category = categories.FirstOrDefault();
+
+        if (category == null)
+        {
+            throw new ValidationException($"Category '{request.CategoryName}' not found.");
+        }
+
+        // Find OrderCategory for this order and category with FurnitureTypes
+        var orderCategories = await _unitOfWork.OrderCategories.GetPagedAsync(
+            pageNumber: 1,
+            pageSize: 1,
+            filter: oc => oc.OrderId == request.OrderId && oc.CategoryId == category.Id,
+            includeProperties: "FurnitureTypes",
+            cancellationToken: cancellationToken);
+        var orderCategory = orderCategories.FirstOrDefault();
+
+        // Get all FurnitureTypes for this order and category
+        List<FurnitureType> furnitureTypesToAssign = new List<FurnitureType>();
+
+        if (orderCategory != null && orderCategory.FurnitureTypes != null && orderCategory.FurnitureTypes.Any())
+        {
+            // Use FurnitureTypes linked via OrderCategory
+            furnitureTypesToAssign = orderCategory.FurnitureTypes.ToList();
+        }
+        else
+        {
+            // Fallback: Find FurnitureTypes directly by OrderId that match category name
+            var allFurnitureTypes = await _unitOfWork.FurnitureTypes.GetPagedAsync(
+                pageNumber: 1,
+                pageSize: 10000,
+                filter: ft => ft.OrderId == request.OrderId,
+                includeProperties: "OrderCategory,OrderCategory.Category",
+                cancellationToken: cancellationToken);
+
+            furnitureTypesToAssign = allFurnitureTypes
+                .Where(ft => ft.OrderCategory != null &&
+                             ft.OrderCategory.Category != null &&
+                             ft.OrderCategory.Category.Name.ToLower() == request.CategoryName.ToLower())
+                .ToList();
+        }
+
+        // If still no furniture types found, create a placeholder one
+        if (!furnitureTypesToAssign.Any())
+        {
+            var furnitureType = new FurnitureType
+            {
+                Name = category.Name,
+                Notes = category.Description ?? "",
+                OrderId = request.OrderId,
+                OrderCategoryId = orderCategory?.Id,
+                CreatedAt = DateTime.UtcNow
+            };
+            await _unitOfWork.FurnitureTypes.AddAsync(furnitureType, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            furnitureTypesToAssign.Add(furnitureType);
+        }
+
+        CategoryAssignment? lastAssignment = null;
+
+        // Create CategoryAssignment for each FurnitureType
+        foreach (var furnitureType in furnitureTypesToAssign)
+        {
+            // Check if this furniture type is already assigned
+            var existingAssignment = await _unitOfWork.CategoryAssignments.GetPagedAsync(
+                pageNumber: 1,
+                pageSize: 1,
+                filter: a => a.OrderId == request.OrderId &&
+                            a.FurnitureTypeId == furnitureType.Id &&
+                            a.Status != CategoryAssignmentStatus.Completed,
+                cancellationToken: cancellationToken);
+
+            if (existingAssignment.Any())
+            {
+                // Skip already assigned furniture types
+                continue;
+            }
+
+            var assignment = new CategoryAssignment
+            {
+                OrderId = request.OrderId,
+                FurnitureTypeId = furnitureType.Id,
+                TeamLeaderId = request.TeamLeaderId,
+                TeamId = team.Id,
+                Notes = request.Notes,
+                Status = CategoryAssignmentStatus.Assigned,
+                AssignedAt = DateTime.UtcNow,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _unitOfWork.CategoryAssignments.AddAsync(assignment, cancellationToken);
+            lastAssignment = assignment;
+        }
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Update order status to Assigned
+        if (order.Status == OrderStatus.New)
+        {
+            order.Status = OrderStatus.Assigned;
+            _unitOfWork.Orders.Update(order);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+
+        if (lastAssignment == null)
+        {
+            throw new ValidationException("All furniture types in this category are already assigned.");
+        }
+
+        return await GetByIdAsync(lastAssignment.Id, cancellationToken);
     }
 }

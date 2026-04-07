@@ -32,6 +32,8 @@ public class FurnitureTypeConfiguration : IEntityTypeConfiguration<FurnitureType
 
         builder.HasIndex(ft => ft.TechnicalSpecificationId);
 
+        builder.HasIndex(ft => ft.OrderCategoryId);
+
         // Soft delete query filter
         builder.HasQueryFilter(ft => !ft.IsDeleted);
 
@@ -60,5 +62,11 @@ public class FurnitureTypeConfiguration : IEntityTypeConfiguration<FurnitureType
             .WithOne(wt => wt.FurnitureType)
             .HasForeignKey(wt => wt.FurnitureTypeId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        // OrderCategory relationship
+        builder.HasOne(ft => ft.OrderCategory)
+            .WithMany(oc => oc.FurnitureTypes)
+            .HasForeignKey(ft => ft.OrderCategoryId)
+            .OnDelete(DeleteBehavior.NoAction);
     }
 }

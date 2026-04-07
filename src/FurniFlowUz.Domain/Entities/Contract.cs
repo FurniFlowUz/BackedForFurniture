@@ -36,7 +36,7 @@ public class Contract : BaseAuditableEntity
     public ContractStatus Status { get; set; } = ContractStatus.New;
 
     [Required]
-    public int ProductionDurationDays { get; set; }
+    public DateTime DeadlineDate { get; set; }
 
     public DateTime? SignedDate { get; set; }
 

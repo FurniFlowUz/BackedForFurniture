@@ -21,6 +21,7 @@ public class UnitOfWork : IUnitOfWork
     private IRepository<Contract>? _contracts;
     private IRepository<Order>? _orders;
     private IRepository<FurnitureType>? _furnitureTypes;
+    private IFurnitureTypeTemplateRepository? _furnitureTypeTemplates;
     private IRepository<Detail>? _details;
     private IRepository<Drawing>? _drawings;
     private IRepository<TechnicalSpecification>? _technicalSpecifications;
@@ -37,6 +38,8 @@ public class UnitOfWork : IUnitOfWork
     private IRepository<DetailTask>? _detailTasks;
     private IRepository<TaskPerformance>? _taskPerformances;
     private IRepository<MaterialAssignment>? _materialAssignments;
+    private IRepository<OrderCategory>? _orderCategories;
+    private IRepository<OrderImage>? _orderImages;
 
     public UnitOfWork(ApplicationDbContext context)
     {
@@ -53,6 +56,7 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<Contract> Contracts => _contracts ??= new Repository<Contract>(_context);
     public IRepository<Order> Orders => _orders ??= new Repository<Order>(_context);
     public IRepository<FurnitureType> FurnitureTypes => _furnitureTypes ??= new Repository<FurnitureType>(_context);
+    public IFurnitureTypeTemplateRepository FurnitureTypeTemplates => _furnitureTypeTemplates ??= new FurnitureTypeTemplateRepository(_context);
     public IRepository<Detail> Details => _details ??= new Repository<Detail>(_context);
     public IRepository<Drawing> Drawings => _drawings ??= new Repository<Drawing>(_context);
     public IRepository<TechnicalSpecification> TechnicalSpecifications => _technicalSpecifications ??= new Repository<TechnicalSpecification>(_context);
@@ -69,6 +73,8 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<DetailTask> DetailTasks => _detailTasks ??= new Repository<DetailTask>(_context);
     public IRepository<TaskPerformance> TaskPerformances => _taskPerformances ??= new Repository<TaskPerformance>(_context);
     public IRepository<MaterialAssignment> MaterialAssignments => _materialAssignments ??= new Repository<MaterialAssignment>(_context);
+    public IRepository<OrderCategory> OrderCategories => _orderCategories ??= new Repository<OrderCategory>(_context);
+    public IRepository<OrderImage> OrderImages => _orderImages ??= new Repository<OrderImage>(_context);
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {

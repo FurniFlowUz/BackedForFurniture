@@ -38,7 +38,7 @@ public class ContractConfiguration : IEntityTypeConfiguration<Contract>
         builder.Property(c => c.Status)
             .IsRequired();
 
-        builder.Property(c => c.ProductionDurationDays)
+        builder.Property(c => c.DeadlineDate)
             .IsRequired();
 
         builder.Property(c => c.DeliveryTerms)

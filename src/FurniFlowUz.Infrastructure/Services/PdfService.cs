@@ -67,7 +67,7 @@ public class PdfService : IPdfService
 
                         row.RelativeItem().Column(col =>
                         {
-                            col.Item().Text($"Production Duration: {contract.ProductionDurationDays} days");
+                            col.Item().Text($"Deadline: {contract.DeadlineDate:yyyy-MM-dd}");
                             col.Item().Text($"Payment Status: {contract.PaymentStatus}");
                         });
                     });

@@ -69,4 +69,9 @@ public class OrderListDto
     /// Date when order was created
     /// </summary>
     public DateTime CreatedAt { get; set; }
+
+    /// <summary>
+    /// Total count of images (room + design) for this order
+    /// </summary>
+    public int ImagesCount { get; set; }
 }

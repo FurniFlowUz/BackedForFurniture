@@ -61,9 +61,9 @@ public class ContractSummaryDto
     public decimal RemainingAmount { get; set; }
 
     /// <summary>
-    /// Production duration in days
+    /// Deadline date for production completion
     /// </summary>
-    public int ProductionDurationDays { get; set; }
+    public DateTime DeadlineDate { get; set; }
 
     /// <summary>
     /// Payment status

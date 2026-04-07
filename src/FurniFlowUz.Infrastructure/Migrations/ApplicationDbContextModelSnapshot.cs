@@ -228,16 +228,18 @@ namespace FurniFlowUz.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("AdditionalNotes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
                     b.Property<decimal>("AdvancePaymentAmount")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal>("AdvancePaymentPercentage")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("decimal(5,2)");
-
-                    b.Property<int>("CategoryId")
-                        .HasColumnType("int");
+                    b.Property<string>("CategoryIds")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("ContractNumber")
                         .IsRequired()
@@ -253,7 +255,7 @@ namespace FurniFlowUz.Infrastructure.Migrations
                     b.Property<int>("CustomerId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("Deadline")
+                    b.Property<DateTime>("DeadlineDate")
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("DeletedAt")
@@ -262,19 +264,26 @@ namespace FurniFlowUz.Infrastructure.Migrations
                     b.Property<int?>("DeletedBy")
                         .HasColumnType("int");
 
+                    b.Property<string>("DeliveryTerms")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
-
-                    b.Property<string>("Notes")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<int>("PaymentStatus")
                         .HasColumnType("int");
 
+                    b.Property<string>("PenaltyTerms")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
                     b.Property<decimal>("RemainingAmount")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<bool>("RequiresApproval")
+                        .HasColumnType("bit");
 
                     b.Property<DateTime?>("SignedDate")
                         .HasColumnType("datetime2");
@@ -294,14 +303,10 @@ namespace FurniFlowUz.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CategoryId");
-
                     b.HasIndex("ContractNumber")
                         .IsUnique();
 
                     b.HasIndex("CustomerId");
-
-                    b.HasIndex("Deadline");
 
                     b.HasIndex("PaymentStatus");
 
@@ -731,6 +736,9 @@ namespace FurniFlowUz.Infrastructure.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
+                    b.Property<int?>("OrderCategoryId")
+                        .HasColumnType("int");
+
                     b.Property<int>("OrderId")
                         .HasColumnType("int");
 
@@ -740,7 +748,13 @@ namespace FurniFlowUz.Infrastructure.Migrations
                         .HasColumnType("decimal(5,2)")
                         .HasDefaultValue(0m);
 
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
                     b.Property<int?>("TechnicalSpecificationId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("TemplateId")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -751,13 +765,79 @@ namespace FurniFlowUz.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("OrderCategoryId");
+
                     b.HasIndex("OrderId");
 
                     b.HasIndex("TechnicalSpecificationId")
                         .IsUnique()
                         .HasFilter("[TechnicalSpecificationId] IS NOT NULL");
 
+                    b.HasIndex("TemplateId");
+
                     b.ToTable("FurnitureTypes");
+                });
+
+            modelBuilder.Entity("FurniFlowUz.Domain.Entities.FurnitureTypeTemplate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DefaultMaterial")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("DefaultNotes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("DeletedBy")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.ToTable("FurnitureTypeTemplates");
                 });
 
             modelBuilder.Entity("FurniFlowUz.Domain.Entities.KPI", b =>
@@ -1128,6 +1208,113 @@ namespace FurniFlowUz.Infrastructure.Migrations
                     b.HasIndex("Status");
 
                     b.ToTable("Orders");
+                });
+
+            modelBuilder.Entity("FurniFlowUz.Domain.Entities.OrderCategory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeadlineDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("OrderId", "CategoryId")
+                        .IsUnique();
+
+                    b.ToTable("OrderCategories");
+                });
+
+            modelBuilder.Entity("FurniFlowUz.Domain.Entities.OrderImage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("DeletedBy")
+                        .HasColumnType("int");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("FilePath")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<long>("FileSize")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ImageType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UploadedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UploadedBy")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ImageType");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("UploadedBy");
+
+                    b.ToTable("OrderImages");
                 });
 
             modelBuilder.Entity("FurniFlowUz.Domain.Entities.Position", b =>
@@ -1784,19 +1971,11 @@ namespace FurniFlowUz.Infrastructure.Migrations
 
             modelBuilder.Entity("FurniFlowUz.Domain.Entities.Contract", b =>
                 {
-                    b.HasOne("FurniFlowUz.Domain.Entities.Category", "Category")
-                        .WithMany("Contracts")
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("FurniFlowUz.Domain.Entities.Customer", "Customer")
                         .WithMany("Contracts")
                         .HasForeignKey("CustomerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("Category");
 
                     b.Navigation("Customer");
                 });
@@ -1886,13 +2065,37 @@ namespace FurniFlowUz.Infrastructure.Migrations
 
             modelBuilder.Entity("FurniFlowUz.Domain.Entities.FurnitureType", b =>
                 {
+                    b.HasOne("FurniFlowUz.Domain.Entities.OrderCategory", "OrderCategory")
+                        .WithMany("FurnitureTypes")
+                        .HasForeignKey("OrderCategoryId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.HasOne("FurniFlowUz.Domain.Entities.Order", "Order")
                         .WithMany("FurnitureTypes")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("FurniFlowUz.Domain.Entities.FurnitureTypeTemplate", "Template")
+                        .WithMany("FurnitureTypes")
+                        .HasForeignKey("TemplateId");
+
                     b.Navigation("Order");
+
+                    b.Navigation("OrderCategory");
+
+                    b.Navigation("Template");
+                });
+
+            modelBuilder.Entity("FurniFlowUz.Domain.Entities.FurnitureTypeTemplate", b =>
+                {
+                    b.HasOne("FurniFlowUz.Domain.Entities.Category", "Category")
+                        .WithMany("FurnitureTypeTemplates")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
                 });
 
             modelBuilder.Entity("FurniFlowUz.Domain.Entities.MaterialAssignment", b =>
@@ -2019,6 +2222,43 @@ namespace FurniFlowUz.Infrastructure.Migrations
                     b.Navigation("Customer");
                 });
 
+            modelBuilder.Entity("FurniFlowUz.Domain.Entities.OrderCategory", b =>
+                {
+                    b.HasOne("FurniFlowUz.Domain.Entities.Category", "Category")
+                        .WithMany("OrderCategories")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("FurniFlowUz.Domain.Entities.Order", "Order")
+                        .WithMany("OrderCategories")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+
+                    b.Navigation("Order");
+                });
+
+            modelBuilder.Entity("FurniFlowUz.Domain.Entities.OrderImage", b =>
+                {
+                    b.HasOne("FurniFlowUz.Domain.Entities.Order", "Order")
+                        .WithMany("OrderImages")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FurniFlowUz.Domain.Entities.User", "Uploader")
+                        .WithMany()
+                        .HasForeignKey("UploadedBy")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Order");
+
+                    b.Navigation("Uploader");
+                });
+
             modelBuilder.Entity("FurniFlowUz.Domain.Entities.TaskPerformance", b =>
                 {
                     b.HasOne("FurniFlowUz.Domain.Entities.DetailTask", "DetailTask")
@@ -2136,7 +2376,9 @@ namespace FurniFlowUz.Infrastructure.Migrations
 
             modelBuilder.Entity("FurniFlowUz.Domain.Entities.Category", b =>
                 {
-                    b.Navigation("Contracts");
+                    b.Navigation("FurnitureTypeTemplates");
+
+                    b.Navigation("OrderCategories");
 
                     b.Navigation("Orders");
                 });
@@ -2179,11 +2421,25 @@ namespace FurniFlowUz.Infrastructure.Migrations
                     b.Navigation("WorkTasks");
                 });
 
+            modelBuilder.Entity("FurniFlowUz.Domain.Entities.FurnitureTypeTemplate", b =>
+                {
+                    b.Navigation("FurnitureTypes");
+                });
+
             modelBuilder.Entity("FurniFlowUz.Domain.Entities.Order", b =>
                 {
                     b.Navigation("FurnitureTypes");
 
+                    b.Navigation("OrderCategories");
+
+                    b.Navigation("OrderImages");
+
                     b.Navigation("WorkTasks");
+                });
+
+            modelBuilder.Entity("FurniFlowUz.Domain.Entities.OrderCategory", b =>
+                {
+                    b.Navigation("FurnitureTypes");
                 });
 
             modelBuilder.Entity("FurniFlowUz.Domain.Entities.Position", b =>

@@ -8,6 +8,7 @@ using FurniFlowUz.Application.DTOs.Customer;
 using FurniFlowUz.Application.DTOs.Department;
 using FurniFlowUz.Application.DTOs.DetailTask;
 using FurniFlowUz.Application.DTOs.Employee;
+using FurniFlowUz.Application.DTOs.FurnitureTypeTemplate;
 using FurniFlowUz.Application.DTOs.MaterialAssignment;
 using FurniFlowUz.Application.DTOs.Notification;
 using FurniFlowUz.Application.DTOs.Order;
@@ -33,6 +34,7 @@ public class AutoMapperProfile : Profile
         ConfigureDepartmentMappings();
         ConfigureCustomerMappings();
         ConfigureCategoryMappings();
+        ConfigureFurnitureTypeTemplateMappings();
         ConfigureContractMappings();
         ConfigureOrderMappings();
         ConfigureConstructorMappings();
@@ -163,7 +165,9 @@ public class AutoMapperProfile : Profile
             .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
             .ForMember(dest => dest.DeletedAt, opt => opt.Ignore())
             .ForMember(dest => dest.DeletedBy, opt => opt.Ignore())
-            .ForMember(dest => dest.Orders, opt => opt.Ignore());
+            .ForMember(dest => dest.Orders, opt => opt.Ignore())
+            .ForMember(dest => dest.OrderCategories, opt => opt.Ignore())
+            .ForMember(dest => dest.FurnitureTypeTemplates, opt => opt.Ignore());
 
         // UpdateCategoryDto to Category
         CreateMap<UpdateCategoryDto, Category>()
@@ -175,7 +179,46 @@ public class AutoMapperProfile : Profile
             .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
             .ForMember(dest => dest.DeletedAt, opt => opt.Ignore())
             .ForMember(dest => dest.DeletedBy, opt => opt.Ignore())
-            .ForMember(dest => dest.Orders, opt => opt.Ignore());
+            .ForMember(dest => dest.Orders, opt => opt.Ignore())
+            .ForMember(dest => dest.OrderCategories, opt => opt.Ignore())
+            .ForMember(dest => dest.FurnitureTypeTemplates, opt => opt.Ignore());
+    }
+
+    /// <summary>
+    /// Configure FurnitureTypeTemplate entity mappings
+    /// </summary>
+    private void ConfigureFurnitureTypeTemplateMappings()
+    {
+        // FurnitureTypeTemplate to FurnitureTypeTemplateDto
+        CreateMap<FurnitureTypeTemplate, FurnitureTypeTemplateDto>()
+            .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category.Name));
+
+        // CreateFurnitureTypeTemplateDto to FurnitureTypeTemplate
+        CreateMap<CreateFurnitureTypeTemplateDto, FurnitureTypeTemplate>()
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatedBy, opt => opt.Ignore())
+            .ForMember(dest => dest.UpdatedBy, opt => opt.Ignore())
+            .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
+            .ForMember(dest => dest.DeletedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.DeletedBy, opt => opt.Ignore())
+            .ForMember(dest => dest.Category, opt => opt.Ignore())
+            .ForMember(dest => dest.FurnitureTypes, opt => opt.Ignore());
+
+        // UpdateFurnitureTypeTemplateDto to FurnitureTypeTemplate
+        CreateMap<UpdateFurnitureTypeTemplateDto, FurnitureTypeTemplate>()
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ForMember(dest => dest.CategoryId, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatedBy, opt => opt.Ignore())
+            .ForMember(dest => dest.UpdatedBy, opt => opt.Ignore())
+            .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
+            .ForMember(dest => dest.DeletedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.DeletedBy, opt => opt.Ignore())
+            .ForMember(dest => dest.Category, opt => opt.Ignore())
+            .ForMember(dest => dest.FurnitureTypes, opt => opt.Ignore());
     }
 
     /// <summary>
@@ -226,6 +269,7 @@ public class AutoMapperProfile : Profile
             .ForMember(dest => dest.Contract, opt => opt.MapFrom(src => src.Contract))
             .ForMember(dest => dest.Customer, opt => opt.MapFrom(src => src.Customer))
             .ForMember(dest => dest.Category, opt => opt.MapFrom(src => src.Category))
+            .ForMember(dest => dest.Categories, opt => opt.MapFrom(src => src.OrderCategories.Select(oc => oc.Category).ToList()))
             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
             .ForMember(dest => dest.FurnitureTypes, opt => opt.MapFrom(src => src.FurnitureTypes))
             .ForMember(dest => dest.AssignedConstructor, opt => opt.MapFrom(src => src.AssignedConstructor))
@@ -250,13 +294,17 @@ public class AutoMapperProfile : Profile
         // Mapping removed to prevent confusion
 
         // UpdateOrderDto to Order
+        // Note: Mapping is handled manually in OrderService.UpdateAsync
+        // This mapping is minimal as update logic is in the service
         CreateMap<UpdateOrderDto, Order>()
+            .ForMember(dest => dest.Notes, opt => opt.MapFrom(src => src.Description ?? src.Notes))
             .ForMember(dest => dest.OrderNumber, opt => opt.Ignore())
             .ForMember(dest => dest.CustomerId, opt => opt.Ignore())
             .ForMember(dest => dest.CategoryId, opt => opt.Ignore())
             .ForMember(dest => dest.ContractId, opt => opt.Ignore())
-            .ForMember(dest => dest.DeadlineDate, opt => opt.MapFrom(src => src.ExpectedDeliveryDate))
-            .ForMember(dest => dest.CompletedAt, opt => opt.MapFrom(src => src.ActualDeliveryDate))
+            .ForMember(dest => dest.DeadlineDate, opt => opt.Ignore())
+            .ForMember(dest => dest.CompletedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.Status, opt => opt.Ignore())
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.ProgressPercentage, opt => opt.Ignore())
             .ForMember(dest => dest.AssignedConstructorId, opt => opt.Ignore())
@@ -274,7 +322,8 @@ public class AutoMapperProfile : Profile
             .ForMember(dest => dest.AssignedConstructor, opt => opt.Ignore())
             .ForMember(dest => dest.AssignedProductionManager, opt => opt.Ignore())
             .ForMember(dest => dest.FurnitureTypes, opt => opt.Ignore())
-            .ForMember(dest => dest.WorkTasks, opt => opt.Ignore());
+            .ForMember(dest => dest.WorkTasks, opt => opt.Ignore())
+            .ForMember(dest => dest.OrderCategories, opt => opt.Ignore());
 
         // AssignOrderDto to Order (partial mapping)
         CreateMap<AssignOrderDto, Order>()
@@ -290,6 +339,9 @@ public class AutoMapperProfile : Profile
         // FurnitureType to FurnitureTypeDto
         CreateMap<FurnitureType, FurnitureTypeDto>()
             .ForMember(dest => dest.OrderNumber, opt => opt.MapFrom(src => src.Order.OrderNumber))
+            .ForMember(dest => dest.OrderCategoryId, opt => opt.MapFrom(src => src.OrderCategoryId))
+            .ForMember(dest => dest.CategoryId, opt => opt.MapFrom(src => src.OrderCategory != null ? src.OrderCategory.CategoryId : (int?)null))
+            .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.OrderCategory != null && src.OrderCategory.Category != null ? src.OrderCategory.Category.Name : null))
             .ForMember(dest => dest.Details, opt => opt.MapFrom(src => src.Details))
             .ForMember(dest => dest.Drawings, opt => opt.MapFrom(src => src.Drawings))
             .ForMember(dest => dest.TechnicalSpecification, opt => opt.MapFrom(src => src.TechnicalSpecification));
@@ -297,9 +349,13 @@ public class AutoMapperProfile : Profile
         // CreateFurnitureTypeDto to FurnitureType
         CreateMap<CreateFurnitureTypeDto, FurnitureType>()
             .ForMember(dest => dest.OrderId, opt => opt.MapFrom(src => (int)src.OrderId))
+            .ForMember(dest => dest.OrderCategoryId, opt => opt.MapFrom(src => src.OrderCategoryId))
             .ForMember(dest => dest.ProgressPercentage, opt => opt.MapFrom(src => 0))
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.TechnicalSpecificationId, opt => opt.Ignore())
+            .ForMember(dest => dest.TemplateId, opt => opt.Ignore())
+            .ForMember(dest => dest.Quantity, opt => opt.Ignore())
+            .ForMember(dest => dest.Notes, opt => opt.Ignore())
             .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
             .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
             .ForMember(dest => dest.CreatedBy, opt => opt.Ignore())
@@ -309,6 +365,8 @@ public class AutoMapperProfile : Profile
             .ForMember(dest => dest.DeletedBy, opt => opt.Ignore())
             .ForMember(dest => dest.Order, opt => opt.Ignore())
             .ForMember(dest => dest.TechnicalSpecification, opt => opt.Ignore())
+            .ForMember(dest => dest.OrderCategory, opt => opt.Ignore())
+            .ForMember(dest => dest.Template, opt => opt.Ignore())
             .ForMember(dest => dest.Details, opt => opt.Ignore())
             .ForMember(dest => dest.Drawings, opt => opt.Ignore())
             .ForMember(dest => dest.WorkTasks, opt => opt.Ignore());
@@ -319,6 +377,9 @@ public class AutoMapperProfile : Profile
             .ForMember(dest => dest.OrderId, opt => opt.Ignore())
             .ForMember(dest => dest.ProgressPercentage, opt => opt.Ignore())
             .ForMember(dest => dest.TechnicalSpecificationId, opt => opt.Ignore())
+            .ForMember(dest => dest.TemplateId, opt => opt.Ignore())
+            .ForMember(dest => dest.Quantity, opt => opt.Ignore())
+            .ForMember(dest => dest.Notes, opt => opt.Ignore())
             .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
             .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
             .ForMember(dest => dest.CreatedBy, opt => opt.Ignore())
@@ -328,6 +389,8 @@ public class AutoMapperProfile : Profile
             .ForMember(dest => dest.DeletedBy, opt => opt.Ignore())
             .ForMember(dest => dest.Order, opt => opt.Ignore())
             .ForMember(dest => dest.TechnicalSpecification, opt => opt.Ignore())
+            .ForMember(dest => dest.OrderCategory, opt => opt.Ignore())
+            .ForMember(dest => dest.Template, opt => opt.Ignore())
             .ForMember(dest => dest.Details, opt => opt.Ignore())
             .ForMember(dest => dest.Drawings, opt => opt.Ignore())
             .ForMember(dest => dest.WorkTasks, opt => opt.Ignore());

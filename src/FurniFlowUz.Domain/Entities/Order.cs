@@ -44,6 +44,11 @@ public class Order : BaseAuditableEntity
     [ForeignKey(nameof(CategoryId))]
     public Category Category { get; set; } = null!;
 
+    /// <summary>
+    /// Many-to-Many relationship with Categories
+    /// </summary>
+    public ICollection<OrderCategory> OrderCategories { get; set; } = new List<OrderCategory>();
+
     [ForeignKey(nameof(ContractId))]
     public Contract? Contract { get; set; }
 
@@ -55,4 +60,5 @@ public class Order : BaseAuditableEntity
 
     public ICollection<FurnitureType> FurnitureTypes { get; set; } = new List<FurnitureType>();
     public ICollection<WorkTask> WorkTasks { get; set; } = new List<WorkTask>();
+    public ICollection<OrderImage> OrderImages { get; set; } = new List<OrderImage>();
 }

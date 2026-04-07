@@ -53,12 +53,16 @@ public static class ServiceExtensions
         services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<ICustomerService, CustomerService>();
         services.AddScoped<ISellerService, SellerService>();
+        services.AddScoped<IFurnitureTypeTemplateService, FurnitureTypeTemplateService>();
 
         // Register task management services
         services.AddScoped<ICategoryAssignmentService, CategoryAssignmentService>();
         services.AddScoped<IDetailTaskService, DetailTaskService>();
         services.AddScoped<ITaskPerformanceService, TaskPerformanceService>();
         services.AddScoped<IMaterialAssignmentService, MaterialAssignmentService>();
+
+        // Register order category service
+        services.AddScoped<IOrderCategoryService, OrderCategoryService>();
 
         return services;
     }

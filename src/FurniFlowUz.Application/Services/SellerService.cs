@@ -265,7 +265,7 @@ public class SellerService : ISellerService
                 c.Id,
                 c.ContractNumber,
                 c.SignedDate,
-                c.ProductionDurationDays,
+                c.DeadlineDate,
                 c.CreatedAt,
                 c.TotalAmount,
                 CustomerName = c.Customer != null ? c.Customer.FullName : null
@@ -283,7 +283,7 @@ public class SellerService : ISellerService
                 Priority = "Medium",
                 RelatedEntityType = "Contract",
                 RelatedEntityId = contract.Id,
-                DueDate = contract.SignedDate?.AddDays(contract.ProductionDurationDays),
+                DueDate = contract.DeadlineDate,
                 CreatedAt = contract.CreatedAt,
                 CustomerName = contract.CustomerName,
                 Amount = contract.TotalAmount
@@ -339,16 +339,14 @@ public class SellerService : ISellerService
         var paymentIssues = await _dbContext.Contracts
             .Where(c => c.CreatedBy == userId &&
                        c.RemainingAmount > 0 &&
-                       c.SignedDate.HasValue &&
-                       c.SignedDate.Value.AddDays(c.ProductionDurationDays) < now &&
+                       c.DeadlineDate < now &&
                        c.Status == ContractStatus.Active)
             .Include(c => c.Customer)
             .Select(c => new
             {
                 c.Id,
                 c.ContractNumber,
-                c.SignedDate,
-                c.ProductionDurationDays,
+                c.DeadlineDate,
                 c.CreatedAt,
                 c.RemainingAmount,
                 CustomerName = c.Customer != null ? c.Customer.FullName : null
@@ -366,7 +364,7 @@ public class SellerService : ISellerService
                 Priority = "Urgent",
                 RelatedEntityType = "Contract",
                 RelatedEntityId = contract.Id,
-                DueDate = contract.SignedDate?.AddDays(contract.ProductionDurationDays),
+                DueDate = contract.DeadlineDate,
                 CreatedAt = contract.CreatedAt,
                 CustomerName = contract.CustomerName,
                 Amount = contract.RemainingAmount

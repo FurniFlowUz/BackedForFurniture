@@ -1,4 +1,4 @@
-using FurniFlowUz.Domain.Enums;
+using FurniFlowUz.Application.DTOs.Constructor;
 
 namespace FurniFlowUz.Application.DTOs.CategoryAssignment;
 
@@ -28,9 +28,34 @@ public class CategoryAssignmentSummaryDto
     public string FurnitureTypeName { get; set; } = string.Empty;
 
     /// <summary>
+    /// Furniture type ID
+    /// </summary>
+    public int FurnitureTypeId { get; set; }
+
+    /// <summary>
+    /// Order ID
+    /// </summary>
+    public int OrderId { get; set; }
+
+    /// <summary>
+    /// Category name (from OrderCategory)
+    /// </summary>
+    public string CategoryName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Team leader ID
+    /// </summary>
+    public int TeamLeaderId { get; set; }
+
+    /// <summary>
     /// Team leader name
     /// </summary>
     public string TeamLeaderName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Team ID
+    /// </summary>
+    public int TeamId { get; set; }
 
     /// <summary>
     /// Team name
@@ -38,14 +63,24 @@ public class CategoryAssignmentSummaryDto
     public string TeamName { get; set; } = string.Empty;
 
     /// <summary>
-    /// Assignment status
+    /// Assignment status (string: Assigned, InProgress, Completed, OnHold)
     /// </summary>
-    public CategoryAssignmentStatus Status { get; set; }
+    public string Status { get; set; } = string.Empty;
 
     /// <summary>
     /// When assigned
     /// </summary>
     public DateTime AssignedAt { get; set; }
+
+    /// <summary>
+    /// When work started
+    /// </summary>
+    public DateTime? StartedAt { get; set; }
+
+    /// <summary>
+    /// When completed
+    /// </summary>
+    public DateTime? CompletedAt { get; set; }
 
     /// <summary>
     /// Task completion progress (e.g., "5/10")
@@ -56,4 +91,15 @@ public class CategoryAssignmentSummaryDto
     /// Completion percentage (0-100)
     /// </summary>
     public decimal CompletionPercent { get; set; }
+
+    /// <summary>
+    /// Constructor's Details (components) for this FurnitureType
+    /// Team Leader needs this to create tasks based on these details
+    /// </summary>
+    public List<DetailDto> Details { get; set; } = new();
+
+    /// <summary>
+    /// Count of details for quick reference
+    /// </summary>
+    public int DetailsCount { get; set; }
 }

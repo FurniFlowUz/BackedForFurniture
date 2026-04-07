@@ -40,6 +40,11 @@ public interface IConstructorService
     Task DeleteFurnitureTypeAsync(int id, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Force deletes a furniture type even if technical specification is locked
+    /// </summary>
+    Task ForceDeleteFurnitureTypeAsync(int id, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets all details across all furniture types assigned to the constructor
     /// </summary>
     Task<IEnumerable<DetailDto>> GetAllConstructorDetailsAsync(int constructorId, CancellationToken cancellationToken = default);
@@ -93,4 +98,28 @@ public interface IConstructorService
     /// Completes and locks a technical specification, making it ready for production
     /// </summary>
     Task CompleteTechnicalSpecificationAsync(int furnitureTypeId,CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Completes a furniture type with all data (details, technical spec) in one request
+    /// </summary>
+    Task CompleteFurnitureTypeWithDataAsync(int furnitureTypeId, CompleteFurnitureTypeDto request, CancellationToken cancellationToken = default);
+
+    #region Order Images
+
+    /// <summary>
+    /// Uploads an image for an order (room photo or design reference)
+    /// </summary>
+    Task<OrderImageDto> UploadOrderImageAsync(UploadOrderImageRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets all images for a specific order
+    /// </summary>
+    Task<IEnumerable<OrderImageDto>> GetOrderImagesAsync(int orderId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Deletes an order image
+    /// </summary>
+    Task DeleteOrderImageAsync(int imageId, CancellationToken cancellationToken = default);
+
+    #endregion
 }

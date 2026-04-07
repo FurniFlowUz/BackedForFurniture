@@ -32,9 +32,14 @@ public class OrderDto
     public CustomerDto Customer { get; set; } = null!;
 
     /// <summary>
-    /// Furniture category
+    /// Furniture category (primary/first category for backward compatibility)
     /// </summary>
     public CategoryDto Category { get; set; } = null!;
+
+    /// <summary>
+    /// All categories associated with this order (Many-to-Many)
+    /// </summary>
+    public List<CategoryDto> Categories { get; set; } = new();
 
     /// <summary>
     /// Order description
@@ -90,4 +95,9 @@ public class OrderDto
     /// Date and time when order was last updated
     /// </summary>
     public DateTime? UpdatedAt { get; set; }
+
+    /// <summary>
+    /// Total count of images (room + design) for this order
+    /// </summary>
+    public int ImagesCount { get; set; }
 }

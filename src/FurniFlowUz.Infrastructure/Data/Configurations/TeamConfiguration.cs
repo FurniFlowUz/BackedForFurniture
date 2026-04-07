@@ -48,7 +48,8 @@ public class TeamConfiguration : IEntityTypeConfiguration<Team>
             .UsingEntity<Dictionary<string, object>>(
                 "TeamMember",
                 j => j.HasOne<User>().WithMany().HasForeignKey("UserId").OnDelete(DeleteBehavior.Cascade),
-                j => j.HasOne<Team>().WithMany().HasForeignKey("TeamId").OnDelete(DeleteBehavior.Cascade));
+                j => j.HasOne<Team>().WithMany().HasForeignKey("TeamId").OnDelete(DeleteBehavior.Cascade),
+                j => j.HasKey("TeamId", "UserId"));  // Composite primary key - allows multiple members per team
 
         builder.HasMany(t => t.WorkTasks)
             .WithOne(wt => wt.Team)

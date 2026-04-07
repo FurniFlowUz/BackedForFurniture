@@ -62,8 +62,9 @@ public class CreateContractDtoValidator : AbstractValidator<CreateContractDto>
             .GreaterThanOrEqualTo(0).WithMessage("Advance payment amount must be non-negative.")
             .LessThanOrEqualTo(x => x.TotalAmount).WithMessage("Advance payment amount cannot exceed total amount.");
 
-        RuleFor(x => x.ProductionDurationDays)
-            .GreaterThan(0).WithMessage("Production duration must be at least 1 day.");
+        RuleFor(x => x.DeadlineDate)
+            .NotEmpty().WithMessage("Deadline date is required.")
+            .GreaterThan(DateTime.UtcNow.Date).WithMessage("Deadline date must be in the future.");
 
         RuleFor(x => x.DeliveryTerms)
             .MaximumLength(2000).WithMessage("Delivery terms cannot exceed 2000 characters.")

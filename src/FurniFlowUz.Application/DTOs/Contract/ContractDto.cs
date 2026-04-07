@@ -65,9 +65,9 @@ public class ContractDto
     public decimal? AdvancePaymentPercentage => TotalAmount > 0 ? (AdvancePaymentAmount / TotalAmount) * 100 : null;
 
     /// <summary>
-    /// DEPRECATED: Deadline for backward compatibility. Calculated from SignedDate + ProductionDurationDays.
+    /// Deadline date for production completion
     /// </summary>
-    public DateTime? Deadline => SignedDate?.AddDays(ProductionDurationDays);
+    public DateTime DeadlineDate { get; set; }
 
     /// <summary>
     /// DEPRECATED: Description field for backward compatibility. Maps to AdditionalNotes.
@@ -90,11 +90,6 @@ public class ContractDto
     /// Remaining amount to be paid
     /// </summary>
     public decimal RemainingAmount { get; set; }
-
-    /// <summary>
-    /// Production duration in days
-    /// </summary>
-    public int ProductionDurationDays { get; set; }
 
     /// <summary>
     /// Contract signed date
